@@ -254,10 +254,11 @@ def render_admin():
                     st.write(pub.content)
 
                     if pub.image_path:
-                        try:
-                            st.image(pub.image_path, width=200)
-                        except Exception:
-                            pass
+                       try:
+                          image_path = pub.image_path.replace("\\", "/")
+                          st.image(image_path, width=200)
+                       except Exception:
+                          pass
 
                     c1, c2, c3 = st.columns(3)
                     with c1:
