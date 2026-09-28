@@ -20,7 +20,10 @@ from services.publication_service import (
     save_publication_image,
     delete_publication,
 )
-
+from services.product_service import (
+    create_product,
+    save_product_image,
+)
 C = COLORS
 
 # ================================================================
@@ -68,8 +71,6 @@ def resolve_file(path):
             os.path.join(BASE_DIR, "uploads", "publications", os.path.basename(raw)),
         ])
 
-    # Les anciennes données peuvent contenir un chemin absolu qui n'est plus
-    # identique au répertoire courant : on essaie aussi le nom du fichier.
     basename = os.path.basename(raw)
     if basename:
         candidates.extend([
@@ -208,19 +209,31 @@ def set_direction():
     rtl = current_lang() == "ar"
     H(f"<style>body, .stApp {{ direction:{'rtl' if rtl else 'ltr'}; }} .rtl-note {{direction:{'rtl' if rtl else 'ltr'};}}</style>")
 
+
 # ================================================================
 # DB : MESSAGES
 # ================================================================
 def get_my_farmers(conseiller_id):
     db = SessionLocal()
     try:
-        rows = db.query(Message).filter(or_(Message.sender_id == conseiller_id, Message.receiver_id == conseiller_id)).all()
+        rows = db.query(Message).filter(
+            or_(
+                Message.sender_id == conseiller_id,
+                Message.receiver_id == conseiller_id
+            )
+        ).all()
         ids = set()
         for message in rows:
-            ids.add(message.receiver_id if message.sender_id == conseiller_id else message.sender_id)
+            ids.add(
+                message.receiver_id
+                if message.sender_id == conseiller_id
+                else message.sender_id
+            )
         if not ids:
             return []
-        return db.query(User).filter(User.id.in_(ids)).order_by(User.username.asc()).all()
+        return db.query(User).filter(
+            User.id.in_(ids)
+        ).order_by(User.username.asc()).all()
     finally:
         db.close()
 
@@ -228,10 +241,18 @@ def get_my_farmers(conseiller_id):
 def get_conversation(conseiller_id, farmer_id):
     db = SessionLocal()
     try:
-        return db.query(Message).filter(or_(
-            and_(Message.sender_id == conseiller_id, Message.receiver_id == farmer_id),
-            and_(Message.sender_id == farmer_id, Message.receiver_id == conseiller_id),
-        )).order_by(Message.created_at.asc()).all()
+        return db.query(Message).filter(
+            or_(
+                and_(
+                    Message.sender_id == conseiller_id,
+                    Message.receiver_id == farmer_id
+                ),
+                and_(
+                    Message.sender_id == farmer_id,
+                    Message.receiver_id == conseiller_id
+                ),
+            )
+        ).order_by(Message.created_at.asc()).all()
     finally:
         db.close()
 
@@ -241,7 +262,13 @@ def send_message(sender_id, receiver_id, content):
         return
     db = SessionLocal()
     try:
-        db.add(Message(sender_id=sender_id, receiver_id=receiver_id, content=content.strip()))
+        db.add(
+            Message(
+                sender_id=sender_id,
+                receiver_id=receiver_id,
+                content=content.strip()
+            )
+        )
         db.commit()
     finally:
         db.close()
@@ -250,7 +277,10 @@ def send_message(sender_id, receiver_id, content):
 def get_unread_count(conseiller_id):
     db = SessionLocal()
     try:
-        return db.query(Message).filter(Message.receiver_id == conseiller_id, Message.is_read == False).count()  # noqa: E712
+        return db.query(Message).filter(
+            Message.receiver_id == conseiller_id,
+            Message.is_read == False
+        ).count()  # noqa: E712
     finally:
         db.close()
 
@@ -271,12 +301,21 @@ def mark_conversation_read(conseiller_id, farmer_id):
 def get_latest_message(conseiller_id, farmer_id):
     db = SessionLocal()
     try:
-        return db.query(Message).filter(or_(
-            and_(Message.sender_id == conseiller_id, Message.receiver_id == farmer_id),
-            and_(Message.sender_id == farmer_id, Message.receiver_id == conseiller_id),
-        )).order_by(Message.created_at.desc()).first()
+        return db.query(Message).filter(
+            or_(
+                and_(
+                    Message.sender_id == conseiller_id,
+                    Message.receiver_id == farmer_id
+                ),
+                and_(
+                    Message.sender_id == farmer_id,
+                    Message.receiver_id == conseiller_id
+                ),
+            )
+        ).order_by(Message.created_at.desc()).first()
     finally:
         db.close()
+
 
 # ================================================================
 # DB : PRODUITS
@@ -284,29 +323,43 @@ def get_latest_message(conseiller_id, farmer_id):
 def get_my_products(conseiller_id):
     db = SessionLocal()
     try:
-        return db.query(Product).filter(Product.conseiller_id == conseiller_id).order_by(Product.created_at.desc()).all()
+        return db.query(Product).filter(
+            Product.conseiller_id == conseiller_id
+        ).order_by(Product.created_at.desc()).all()
     finally:
         db.close()
 
 
-def add_product(conseiller_id, name, description, price, stock):
-    db = SessionLocal()
-    try:
-        db.add(Product(conseiller_id=conseiller_id, name=name, description=description, price=price, stock=stock))
-        db.commit()
-    finally:
-        db.close()
+def add_product(conseiller_id, name, description, price, stock, image_path=None):
+    create_product(
+        conseiller_id=conseiller_id,
+        name=name,
+        description=description,
+        price=price,
+        stock=stock,
+        image_path=image_path,
+    )
 
 
 def delete_product(product_id):
+
     db = SessionLocal()
+
     try:
-        product = db.query(Product).filter(Product.id == product_id).first()
+
+        product = db.query(Product).filter(
+            Product.id == product_id
+        ).first()
+
         if product:
+
             db.delete(product)
             db.commit()
+
     finally:
+
         db.close()
+
 
 # ================================================================
 # DESIGN
@@ -314,6 +367,7 @@ def delete_product(product_id):
 def styles():
     hero = f"url('{HERO_URI}')" if HERO_URI else "none"
     logo = f"url('{LOGO_URI}')" if LOGO_URI else "none"
+
     H(f"""
     <style>
     /* ===================== GLOBAL ===================== */
@@ -446,6 +500,7 @@ def styles():
     </style>
     """)
 
+
 # ================================================================
 # NAVIGATION / TOPBAR
 # ================================================================
@@ -453,21 +508,42 @@ def nav(username, unread):
     def go_to_section(section):
         st.session_state.cons_section = section
 
+        # Synchroniser la navigation mobile avec la section choisie
+        mobile_labels = {
+            "home": "🏠 Accueil",
+            "publications": "📢 Publications",
+            "products": "🛒 Produits",
+            "messages": "💬 Messages",
+            "farmers": "👥 Agriculteurs",
+            "profile": "👤 Profil",
+        }
+        st.session_state.mobile_cons_nav = mobile_labels.get(
+            section,
+            "🏠 Accueil"
+        )
+
     with st.sidebar:
         if LOGO_URI:
             H(f'<div class="brand"><div class="brand-logo"></div></div>')
         else:
             H('<div class="brand"><div class="brand-fallback">🌿 Smart Filaha</div></div>')
+
         H(f'<div class="nav-caption">{esc(t("nav"))}</div>')
+
         items = [
-            ("🏠", "dashboard", "n_home", "home"), ("📢", "publications", "n_pub", "publications"),
-            ("🛒", "products", "n_prod", "products"), ("💬", "messages", "n_msg", "messages"),
-            ("👥", "farmers", "n_farmer", "farmers"), ("👤", "profile", "n_profile", "profile"),
+            ("🏠", "dashboard", "n_home", "home"),
+            ("📢", "publications", "n_pub", "publications"),
+            ("🛒", "products", "n_prod", "products"),
+            ("💬", "messages", "n_msg", "messages"),
+            ("👥", "farmers", "n_farmer", "farmers"),
+            ("👤", "profile", "n_profile", "profile"),
         ]
+
         for icon, key, button_key, section in items:
             label = f"{icon}  {t(key)}"
             if section == "messages" and unread:
                 label += f"   • {unread}"
+
             st.button(
                 label,
                 key=button_key,
@@ -475,8 +551,19 @@ def nav(username, unread):
                 on_click=go_to_section,
                 args=(section,),
             )
-        H(f'<div class="side-account"><div class="side-account-name">👨‍🌾 {esc(username)}</div><div class="side-account-role">Conseiller agricole</div></div>')
-        if st.button(f"🚪  {t('logout')}", key="n_logout", use_container_width=True):
+
+        H(
+            f'<div class="side-account">'
+            f'<div class="side-account-name">👨‍🌾 {esc(username)}</div>'
+            f'<div class="side-account-role">Conseiller agricole</div>'
+            f'</div>'
+        )
+
+        if st.button(
+            f"🚪  {t('logout')}",
+            key="n_logout",
+            use_container_width=True
+        ):
             from auth.login import logout
             logout()
             st.rerun()
@@ -488,7 +575,13 @@ def topbar(username, unread):
         <div class="top-brand"></div>
         <div class="top-search">🔎&nbsp;&nbsp; {esc(t('search'))}</div>
         <div class="notif">🔔<span class="badge">{unread if unread else 0}</span></div>
-        <div class="top-user"><div class="top-avatar">👨‍🌾</div><div><div class="top-user-name">{esc(username)}</div><div class="top-user-role">Conseiller agricole</div></div></div>
+        <div class="top-user">
+            <div class="top-avatar">👨‍🌾</div>
+            <div>
+                <div class="top-user-name">{esc(username)}</div>
+                <div class="top-user-role">Conseiller agricole</div>
+            </div>
+        </div>
     </div>
     """)
 
@@ -502,33 +595,52 @@ def topbar(username, unread):
         ("👥 Agriculteurs", "farmers"),
         ("👤 Profil", "profile"),
     ]
+
     current_section = st.session_state.get("cons_section", "home")
     labels = [x[0] for x in mobile_items]
-    current_label = next((label for label, section in mobile_items if section == current_section), labels[0])
-    mobile_choice = st.radio(
+    current_label = next(
+        (label for label, section in mobile_items if section == current_section),
+        labels[0]
+    )
+
+    # Synchronisation de la navigation mobile.
+    # Le radio ne doit plus écraser la section choisie par le sidebar.
+    def sync_mobile_nav():
+        chosen = st.session_state.mobile_cons_nav
+        st.session_state.cons_section = dict(mobile_items)[chosen]
+
+    if "mobile_cons_nav" not in st.session_state:
+        st.session_state.mobile_cons_nav = current_label
+
+    st.radio(
         "Navigation mobile",
         labels,
-        index=labels.index(current_label),
         horizontal=True,
         label_visibility="collapsed",
         key="mobile_cons_nav",
+        on_change=sync_mobile_nav,
     )
-    chosen_section = dict(mobile_items)[mobile_choice]
-    if chosen_section != current_section:
-        st.session_state.cons_section = chosen_section
-        st.rerun()
 
     lc1, lc2 = st.columns([8.6, 1.4])
+
     with lc2:
         options = list(LANGS.keys())
-        selected = options[[v for v in LANGS.values()].index(current_lang())]
+        selected = options[
+            [v for v in LANGS.values()].index(current_lang())
+        ]
+
         new_lang = st.selectbox(
-            "Langue", options, index=options.index(selected),
-            key="ui_language_select", label_visibility="collapsed"
+            "Langue",
+            options,
+            index=options.index(selected),
+            key="ui_language_select",
+            label_visibility="collapsed"
         )
+
         if LANGS[new_lang] != current_lang():
             st.session_state.ui_lang = LANGS[new_lang]
             st.rerun()
+
 
 # ================================================================
 # HOME HELPERS
@@ -550,14 +662,21 @@ def _product_image(product):
 def _recent_publication(pubs):
     if not pubs:
         return None
-    return sorted(pubs, key=lambda p: getattr(p, "created_at", None) or 0, reverse=True)[0]
+    return sorted(
+        pubs,
+        key=lambda p: getattr(p, "created_at", None) or 0,
+        reverse=True
+    )[0]
 
 
 def _publication_bars(pubs):
     days = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
+
     if current_lang() == "ar":
         days = ["اث", "ثل", "أر", "خم", "جم", "سب", "أح"]
+
     counts = Counter()
+
     for p in pubs:
         dt = getattr(p, "created_at", None)
         if dt:
@@ -565,22 +684,34 @@ def _publication_bars(pubs):
                 counts[dt.weekday()] += 1
             except Exception:
                 pass
+
     values = [counts[i] for i in range(7)]
     maximum = max(values) if values else 1
     maximum = maximum or 1
+
     return "".join(
-        f'<div class="bar-col"><div class="bar" style="height:{max(6, int((v/maximum)*112))}px"></div><div class="bar-label">{d}</div></div>'
+        f'<div class="bar-col">'
+        f'<div class="bar" style="height:{max(6, int((v/maximum)*112))}px"></div>'
+        f'<div class="bar-label">{d}</div>'
+        f'</div>'
         for d, v in zip(days, values)
     )
 
 
 def _conversation_preview(conseiller_id, farmers):
     result = []
+
     for farmer in farmers:
         message = get_latest_message(conseiller_id, farmer.id)
         result.append((farmer, message))
-    result.sort(key=lambda x: getattr(x[1], "created_at", None) if x[1] else 0, reverse=True)
+
+    result.sort(
+        key=lambda x: getattr(x[1], "created_at", None) if x[1] else 0,
+        reverse=True
+    )
+
     return result
+
 
 # ================================================================
 # HOME
@@ -603,19 +734,42 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
         ("💬", unread, t("messages_short"), t("farmers_contact")),
         ("👥", len(farmers), t("farmers_short"), t("contact")),
     ]
+
     cols = st.columns(4, gap="medium")
+
     for col, (icon, value, label, note) in zip(cols, stats):
         with col:
-            H(f'<div class="stat-card"><div class="stat-head"><div class="stat-icon">{icon}</div><div class="stat-live">{esc(t("active"))}</div></div><div class="stat-value">{value}</div><div class="stat-label">{esc(label)} · {esc(note)}</div></div>')
+            H(
+                f'<div class="stat-card">'
+                f'<div class="stat-head">'
+                f'<div class="stat-icon">{icon}</div>'
+                f'<div class="stat-live">{esc(t("active"))}</div>'
+                f'</div>'
+                f'<div class="stat-value">{value}</div>'
+                f'<div class="stat-label">{esc(label)} · {esc(note)}</div>'
+                f'</div>'
+            )
 
     left, right = st.columns([1.65, 1], gap="medium")
     recent = _recent_publication(pubs)
 
     with left:
-        H(f'<div class="section-row"><div><div class="section-title">📢 {esc(t("recent_pubs"))}</div><div class="section-sub">{esc(t("recent_pubs_sub"))}</div></div><div class="section-link">{esc(t("all_pubs"))}</div></div>')
+        H(
+            f'<div class="section-row">'
+            f'<div><div class="section-title">📢 {esc(t("recent_pubs"))}</div>'
+            f'<div class="section-sub">{esc(t("recent_pubs_sub"))}</div></div>'
+            f'<div class="section-link">{esc(t("all_pubs"))}</div>'
+            f'</div>'
+        )
+
         if recent:
             uri = image_data_uri(getattr(recent, "image_path", None))
-            image_html = f'<img class="feature-image" src="{uri}" alt="Publication">' if uri else '<div class="product-placeholder">🌱</div>'
+            image_html = (
+                f'<img class="feature-image" src="{uri}" alt="Publication">'
+                if uri
+                else '<div class="product-placeholder">🌱</div>'
+            )
+
             H(f"""
             <div class="card feature">
                 {image_html}
@@ -628,196 +782,617 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
             </div>
             """)
         else:
-            H(f'<div class="card" style="padding:70px;text-align:center;color:#89948e;font-size:9px;">📢<br><br>{esc(t("no_pub"))}</div>')
+            H(
+                f'<div class="card" style="padding:70px;text-align:center;color:#89948e;font-size:9px;">'
+                f'📢<br><br>{esc(t("no_pub"))}</div>'
+            )
+
         if st.button(f"{t('all_pubs')} →", key="all_pubs_home"):
             st.session_state.cons_section = "publications"
             st.rerun()
 
     with right:
-        H(f'<div class="section-row"><div><div class="section-title">📊 {esc(t("activity"))}</div><div class="section-sub">{esc(t("activity_sub"))}</div></div><div class="section-link">{esc(t("week"))}</div></div>')
-        H(f'<div class="card right-card"><div class="section-title" style="font-size:9px;">{esc(t("recent_pubs"))}</div><div class="section-sub">Données réelles de vos publications</div><div class="activity-bars">{_publication_bars(pubs)}</div><div class="legend">● Publications</div></div>')
+        H(
+            f'<div class="section-row">'
+            f'<div><div class="section-title">📊 {esc(t("activity"))}</div>'
+            f'<div class="section-sub">{esc(t("activity_sub"))}</div></div>'
+            f'<div class="section-link">{esc(t("week"))}</div></div>'
+        )
 
-        H(f'<div class="section-row" style="margin-top:14px;"><div><div class="section-title">💬 {esc(t("conversations"))}</div><div class="section-sub">{esc(t("conversations_sub"))}</div></div></div><div class="card conversation-card">')
+        H(
+            f'<div class="card right-card">'
+            f'<div class="section-title" style="font-size:9px;">{esc(t("recent_pubs"))}</div>'
+            f'<div class="section-sub">Données réelles de vos publications</div>'
+            f'<div class="activity-bars">{_publication_bars(pubs)}</div>'
+            f'<div class="legend">● Publications</div>'
+            f'</div>'
+        )
+
+        H(
+            f'<div class="section-row" style="margin-top:14px;">'
+            f'<div><div class="section-title">💬 {esc(t("conversations"))}</div>'
+            f'<div class="section-sub">{esc(t("conversations_sub"))}</div></div>'
+            f'</div>'
+            f'<div class="card conversation-card">'
+        )
+
         conversations = _conversation_preview(conseiller_id, farmers)[:4]
+
         if conversations:
             for farmer, message in conversations:
                 preview = message.content if message else t("no_messages")
-                H(f'<div class="conversation-item"><div class="avatar">👨‍🌾</div><div class="conv-main"><div class="conv-name">{esc(farmer.username)}</div><div class="conv-msg">{esc(preview)[:72]}</div></div><div class="conv-time">{fmt_date(getattr(message,"created_at",None),False) if message else ""}</div></div>')
+
+                H(
+                    f'<div class="conversation-item">'
+                    f'<div class="avatar">👨‍🌾</div>'
+                    f'<div class="conv-main">'
+                    f'<div class="conv-name">{esc(farmer.username)}</div>'
+                    f'<div class="conv-msg">{esc(preview)[:72]}</div>'
+                    f'</div>'
+                    f'<div class="conv-time">'
+                    f'{fmt_date(getattr(message,"created_at",None),False) if message else ""}'
+                    f'</div>'
+                    f'</div>'
+                )
         else:
-            H(f'<div style="padding:24px;text-align:center;color:#89948e;font-size:8px;">{esc(t("no_conv"))}</div>')
+            H(
+                f'<div style="padding:24px;text-align:center;color:#89948e;font-size:8px;">'
+                f'{esc(t("no_conv"))}</div>'
+            )
+
         H('</div>')
+
         if st.button(f"{t('open_messages')} →", key="open_msg_home"):
             st.session_state.cons_section = "messages"
             st.rerun()
 
-    H(f'<div class="section-row" style="margin-top:20px;"><div><div class="section-title">🛒 {esc(t("popular_products"))}</div><div class="section-sub">{esc(t("popular_products_sub"))}</div></div><div class="section-link">{esc(t("catalog"))}</div></div>')
+    H(
+        f'<div class="section-row" style="margin-top:20px;">'
+        f'<div><div class="section-title">🛒 {esc(t("popular_products"))}</div>'
+        f'<div class="section-sub">{esc(t("popular_products_sub"))}</div></div>'
+        f'<div class="section-link">{esc(t("catalog"))}</div>'
+        f'</div>'
+    )
+
     if not products_list:
-        H(f'<div class="card" style="padding:35px;text-align:center;color:#89948e;font-size:9px;">🛒<br><br>{esc(t("no_product"))}</div>')
+        H(
+            f'<div class="card" style="padding:35px;text-align:center;color:#89948e;font-size:9px;">'
+            f'🛒<br><br>{esc(t("no_product"))}</div>'
+        )
     else:
         pcols = st.columns(min(4, len(products_list)), gap="medium")
+
         for col, product in zip(pcols, products_list[:4]):
             with col:
                 stock = int(getattr(product, "stock", 0) or 0)
                 stock_cls = "stock-ok" if stock > 5 else "stock-low"
                 stock_text = t("stock_ok") if stock > 5 else t("stock_low")
-                H(f'<div class="product-card">{_product_image(product)}<div class="product-content"><div class="product-name">{esc(product.name)}</div><div class="product-desc">{esc(getattr(product,"description", ""))}</div><div class="product-bottom"><div class="price">{float(getattr(product,"price",0) or 0):.2f} DH</div><span class="{stock_cls}">{esc(stock_text)} · {stock}</span></div></div></div>')
+
+                H(
+                    f'<div class="product-card">'
+                    f'{_product_image(product)}'
+                    f'<div class="product-content">'
+                    f'<div class="product-name">{esc(product.name)}</div>'
+                    f'<div class="product-desc">{esc(getattr(product,"description", ""))}</div>'
+                    f'<div class="product-bottom">'
+                    f'<div class="price">{float(getattr(product,"price",0) or 0):.2f} DH</div>'
+                    f'<span class="{stock_cls}">{esc(stock_text)} · {stock}</span>'
+                    f'</div></div></div>'
+                )
+
         if st.button(f"{t('manage_products')} →", key="manage_prod_home"):
             st.session_state.cons_section = "products"
             st.rerun()
+
 
 # ================================================================
 # MESSAGES
 # ================================================================
 def messages(conseiller_id, farmers):
-    H(f'<div class="page-heading"><h2>💬 {esc(t("messages"))}</h2><p>{esc(t("messages_page_sub"))}</p></div>')
+    H(
+        f'<div class="page-heading">'
+        f'<h2>💬 {esc(t("messages"))}</h2>'
+        f'<p>{esc(t("messages_page_sub"))}</p>'
+        f'</div>'
+    )
+
     if not farmers:
-        H(f'<div class="card" style="padding:70px;text-align:center;color:#89948e;font-size:9px;">💬<br><br>{esc(t("no_conv"))}</div>')
+        H(
+            f'<div class="card" style="padding:70px;text-align:center;color:#89948e;font-size:9px;">'
+            f'💬<br><br>{esc(t("no_conv"))}</div>'
+        )
         return
+
     ids = {farmer.id for farmer in farmers}
+
     if st.session_state.get("selected_farmer") not in ids:
         st.session_state.selected_farmer = farmers[0].id
+
     left, right = st.columns([.9, 2], gap="medium")
+
     with left:
-        H(f'<div class="section-title" style="margin:4px 0 9px;">{esc(t("conversations_page"))}</div><div class="card" style="padding:8px 10px;">')
+        H(
+            f'<div class="section-title" style="margin:4px 0 9px;">'
+            f'{esc(t("conversations_page"))}</div>'
+            f'<div class="card" style="padding:8px 10px;">'
+        )
+
         for farmer in farmers:
             latest = get_latest_message(conseiller_id, farmer.id)
             preview = latest.content if latest else t("no_messages")
-            if st.button(f"👨‍🌾 {farmer.username}\n{preview[:38]}", key=f"cf_{farmer.id}", use_container_width=True):
+
+            if st.button(
+                f"👨‍🌾 {farmer.username}\n{preview[:38]}",
+                key=f"cf_{farmer.id}",
+                use_container_width=True
+            ):
                 st.session_state.selected_farmer = farmer.id
                 st.rerun()
+
         H('</div>')
+
     fid = st.session_state.selected_farmer
-    selected = next((f for f in farmers if f.id == fid), farmers[0])
+    selected = next(
+        (f for f in farmers if f.id == fid),
+        farmers[0]
+    )
+
     mark_conversation_read(conseiller_id, fid)
     conv = get_conversation(conseiller_id, fid)
+
     with right:
-        H(f'<div class="chat-shell"><div class="chat-header"><div class="avatar">👨‍🌾</div><div><div class="chat-title">{esc(selected.username)}</div><div class="chat-role">{esc(t("active_conversation"))}</div></div></div><div class="chat-body">')
+        H(
+            f'<div class="chat-shell">'
+            f'<div class="chat-header">'
+            f'<div class="avatar">👨‍🌾</div>'
+            f'<div>'
+            f'<div class="chat-title">{esc(selected.username)}</div>'
+            f'<div class="chat-role">{esc(t("active_conversation"))}</div>'
+            f'</div></div>'
+            f'<div class="chat-body">'
+        )
+
         if not conv:
-            H(f'<div style="text-align:center;padding:100px 10px;color:#89948e;font-size:9px;">{esc(t("no_messages"))}</div>')
+            H(
+                f'<div style="text-align:center;padding:100px 10px;color:#89948e;font-size:9px;">'
+                f'{esc(t("no_messages"))}</div>'
+            )
         else:
             for message in conv:
-                cls = "chat-mine" if message.sender_id == conseiller_id else "chat-other"
-                H(f'<div class="chat-bubble {cls}">{esc(message.content)}</div>')
+                cls = (
+                    "chat-mine"
+                    if message.sender_id == conseiller_id
+                    else "chat-other"
+                )
+                H(
+                    f'<div class="chat-bubble {cls}">'
+                    f'{esc(message.content)}'
+                    f'</div>'
+                )
+
         H('</div></div>')
+
         with st.form(f"reply_{fid}", clear_on_submit=True):
-            text = st.text_input("message", placeholder=t("write_message"), label_visibility="collapsed")
-            if st.form_submit_button(t("send"), use_container_width=True) and text.strip():
+            text = st.text_input(
+                "message",
+                placeholder=t("write_message"),
+                label_visibility="collapsed"
+            )
+
+            if (
+                st.form_submit_button(
+                    t("send"),
+                    use_container_width=True
+                )
+                and text.strip()
+            ):
                 send_message(conseiller_id, fid, text)
                 st.rerun()
+
 
 # ================================================================
 # PRODUCTS
 # ================================================================
 def products(conseiller_id, items):
-    H(f'<div class="page-heading"><h2>🛒 {esc(t("products"))}</h2><p>{esc(t("products_page_sub"))}</p></div>')
+    H(
+        f'<div class="page-heading">'
+        f'<h2>🛒 {esc(t("products"))}</h2>'
+        f'<p>{esc(t("products_page_sub"))}</p>'
+        f'</div>'
+    )
+
     with st.expander(f"➕ {t('add_product')}"):
-        n = st.text_input(t("product_name"), key="pn")
-        d = st.text_area(t("description"), key="pd")
+        n = st.text_input(
+            t("product_name"),
+            key="pn"
+        )
+
+        d = st.text_area(
+            t("description"),
+            key="pd"
+        )
+
+        # صورة المنتج
+        product_image = st.file_uploader(
+            "📷 Image du produit",
+            type=["jpg", "jpeg", "png", "webp"],
+            key="product_image_upload"
+        )
+
         c1, c2 = st.columns(2)
-        with c1: price = st.number_input(t("price"), min_value=0.0, step=1.0, key="pp")
-        with c2: stock = st.number_input(t("stock"), min_value=0, step=1, key="ps")
-        if st.button(t("add"), key="addp", use_container_width=True):
+
+        with c1:
+            price = st.number_input(
+                t("price"),
+                min_value=0.0,
+                step=1.0,
+                key="pp"
+            )
+
+        with c2:
+            stock = st.number_input(
+                t("stock"),
+                min_value=0,
+                step=1,
+                key="ps"
+            )
+
+        if st.button(
+            t("add"),
+            key="addp",
+            use_container_width=True
+        ):
             if n.strip() and price > 0:
-                add_product(conseiller_id, n, d, float(price), int(stock))
-                st.success(t("added")); st.rerun()
-            else: st.warning(t("fill_name_price"))
+
+                image_path = (
+                    save_product_image(product_image)
+                    if product_image
+                    else None
+                )
+
+                add_product(
+                    conseiller_id,
+                    n.strip(),
+                    d.strip(),
+                    float(price),
+                    int(stock),
+                    image_path=image_path,
+                )
+
+                st.success(t("added"))
+                st.rerun()
+
+            else:
+                st.warning(t("fill_name_price"))
+
     if not items:
-        H(f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">🛒<br><br>{esc(t("no_product"))}</div>'); return
+        H(
+            f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">'
+            f'🛒<br><br>{esc(t("no_product"))}</div>'
+        )
+        return
+
     cols = st.columns(3, gap="medium")
+
     for i, product in enumerate(items):
         with cols[i % 3]:
-            stock = int(getattr(product, "stock", 0) or 0); stock_cls = "stock-ok" if stock > 5 else "stock-low"; stock_text = t("stock_ok") if stock > 5 else t("stock_low")
-            H(f'<div class="product-card">{_product_image(product)}<div class="product-content"><div class="product-name">{esc(product.name)}</div><div class="product-desc" style="height:auto;min-height:30px;">{esc(getattr(product,"description",""))}</div><div class="product-bottom"><div class="price">{float(getattr(product,"price",0) or 0):.2f} DH</div><span class="{stock_cls}">{esc(stock_text)} · {stock}</span></div></div></div>')
-            if st.button(f"🗑️ {t('delete')}", key=f"dp_{product.id}", use_container_width=True):
-                delete_product(product.id); st.rerun()
+
+            stock = int(getattr(product, "stock", 0) or 0)
+            stock_cls = "stock-ok" if stock > 5 else "stock-low"
+            stock_text = t("stock_ok") if stock > 5 else t("stock_low")
+
+            H(
+                f'<div class="product-card">'
+                f'{_product_image(product)}'
+                f'<div class="product-content">'
+                f'<div class="product-name">{esc(product.name)}</div>'
+                f'<div class="product-desc" style="height:auto;min-height:30px;">'
+                f'{esc(getattr(product,"description",""))}'
+                f'</div>'
+                f'<div class="product-bottom">'
+                f'<div class="price">{float(getattr(product,"price",0) or 0):.2f} DH</div>'
+                f'<span class="{stock_cls}">{esc(stock_text)} · {stock}</span>'
+                f'</div></div></div>'
+            )
+
+            # Publier le produit directement
+            if st.button(
+                f"📢 {t('publish')}",
+                key=f"publish_product_{product.id}",
+                use_container_width=True
+            ):
+                product_title = str(
+                    getattr(product, "name", "") or ""
+                ).strip()
+
+                product_description = str(
+                    getattr(product, "description", "") or ""
+                ).strip()
+
+                if not product_title:
+                    st.warning(t("fill_title_content"))
+                else:
+                    create_publication(
+                        conseiller_id,
+                        product_title,
+                        product_description or product_title,
+                        publication_type="produit",
+                        image_path=getattr(
+                            product,
+                            "image_path",
+                            None
+                        ),
+                        product_id=product.id,
+                    )
+
+                    st.success(t("pub_created"))
+                    st.session_state.cons_section = "publications"
+                    st.rerun()
+
+            # Supprimer
+            if st.button(
+                f"🗑️ {t('delete')}",
+                key=f"dp_{product.id}",
+                use_container_width=True
+            ):
+                delete_product(product.id)
+                st.rerun()
+
 
 # ================================================================
 # PUBLICATIONS
 # ================================================================
 def publications(conseiller_id, products_list, pubs):
-    H(f'<div class="page-heading"><h2>📢 {esc(t("publications"))}</h2><p>{esc(t("pub_page_sub"))}</p></div>')
+    H(
+        f'<div class="page-heading">'
+        f'<h2>📢 {esc(t("publications"))}</h2>'
+        f'<p>{esc(t("pub_page_sub"))}</p>'
+        f'</div>'
+    )
+
     with st.expander(f"➕ {t('new_pub')}"):
         title = st.text_input(t("title"), key="pt")
-        typ = st.selectbox(t("type"), ["conseil", "article", "annonce", "produit"], key="pty")
+        typ = st.selectbox(
+            t("type"),
+            ["conseil", "article", "annonce", "produit"],
+            key="pty"
+        )
         content = st.text_area(t("description"), key="pc")
-        image = st.file_uploader(t("image_optional"), type=["jpg", "jpeg", "png"], key="pi")
+        image = st.file_uploader(
+            t("image_optional"),
+            type=["jpg", "jpeg", "png"],
+            key="pi"
+        )
+
         linked = None
+
         if typ == "produit" and products_list:
             mapping = {p.id: p.name for p in products_list}
-            linked = st.selectbox(t("link_product"), list(mapping), format_func=lambda x: mapping[x], key="pl")
-        if st.button(t("publish"), key="pubbtn", use_container_width=True):
+
+            linked = st.selectbox(
+                t("link_product"),
+                list(mapping),
+                format_func=lambda x: mapping[x],
+                key="pl"
+            )
+
+        if st.button(
+            t("publish"),
+            key="pubbtn",
+            use_container_width=True
+        ):
             if title.strip() and content.strip():
                 path = save_publication_image(image) if image else None
-                create_publication(conseiller_id, title.strip(), content.strip(), publication_type=typ, image_path=path, product_id=linked)
-                st.success(t("pub_created")); st.rerun()
-            else: st.warning(t("fill_title_content"))
+
+                create_publication(
+                    conseiller_id,
+                    title.strip(),
+                    content.strip(),
+                    publication_type=typ,
+                    image_path=path,
+                    product_id=linked
+                )
+
+                st.success(t("pub_created"))
+                st.rerun()
+            else:
+                st.warning(t("fill_title_content"))
+
     if not pubs:
-        H(f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">📢<br><br>{esc(t("no_pub"))}</div>'); return
+        H(
+            f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">'
+            f'📢<br><br>{esc(t("no_pub"))}</div>'
+        )
+        return
+
     for publication in pubs:
-        uri = image_data_uri(getattr(publication, "image_path", None))
-        image_html = f'<img class="pub-image" src="{uri}" alt="Publication">' if uri else ""
-        H(f'<div class="pub-card"><div class="pub-title">{esc(publication.title)}</div><div class="pub-meta">{esc(publication.publication_type)} · {esc(publication.status)} · {fmt_date(getattr(publication,"created_at",None))}</div><div class="pub-body">{esc(publication.content)}</div>{image_html}</div>')
-        if st.button(f"🗑️ {t('delete')}", key=f"dpub_{publication.id}"):
-            delete_publication(publication.id, conseiller_id); st.rerun()
+        uri = image_data_uri(
+            getattr(publication, "image_path", None)
+        )
+
+        image_html = (
+            f'<img class="pub-image" src="{uri}" alt="Publication">'
+            if uri
+            else ""
+        )
+
+        H(
+            f'<div class="pub-card">'
+            f'<div class="pub-title">{esc(publication.title)}</div>'
+            f'<div class="pub-meta">'
+            f'{esc(publication.publication_type)} · '
+            f'{esc(publication.status)} · '
+            f'{fmt_date(getattr(publication,"created_at",None))}'
+            f'</div>'
+            f'<div class="pub-body">{esc(publication.content)}</div>'
+            f'{image_html}'
+            f'</div>'
+        )
+
+        if st.button(
+            f"🗑️ {t('delete')}",
+            key=f"dpub_{publication.id}"
+        ):
+            delete_publication(
+                publication.id,
+                conseiller_id
+            )
+            st.rerun()
+
 
 # ================================================================
 # FARMERS / PROFILE
 # ================================================================
 def farmers_section(conseiller_id, farmers):
-    H(f'<div class="page-heading"><h2>👥 {esc(t("farmers"))}</h2><p>{esc(t("farmers_page_sub"))}</p></div>')
+    H(
+        f'<div class="page-heading">'
+        f'<h2>👥 {esc(t("farmers"))}</h2>'
+        f'<p>{esc(t("farmers_page_sub"))}</p>'
+        f'</div>'
+    )
+
     if not farmers:
-        H(f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">{esc(t("no_conv"))}</div>'); return
+        H(
+            f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">'
+            f'{esc(t("no_conv"))}</div>'
+        )
+        return
+
     cols = st.columns(3, gap="medium")
+
     for i, farmer in enumerate(farmers):
         with cols[i % 3]:
-            H(f'<div class="card" style="padding:18px;margin-bottom:8px;text-align:center;"><div class="avatar" style="margin:0 auto 9px;">👨‍🌾</div><div style="font-size:11px;font-weight:900;color:#173f2e;">{esc(farmer.username)}</div><div style="font-size:8px;color:#89948e;margin-top:3px;">{esc(t("farmer"))}</div></div>')
-            if st.button(f"💬 {t('open_conversation')}", key=f"fc_{farmer.id}", use_container_width=True):
-                st.session_state.selected_farmer = farmer.id; st.session_state.cons_section = "messages"; st.rerun()
+            H(
+                f'<div class="card" style="padding:18px;margin-bottom:8px;text-align:center;">'
+                f'<div class="avatar" style="margin:0 auto 9px;">👨‍🌾</div>'
+                f'<div style="font-size:11px;font-weight:900;color:#173f2e;">'
+                f'{esc(farmer.username)}</div>'
+                f'<div style="font-size:8px;color:#89948e;margin-top:3px;">'
+                f'{esc(t("farmer"))}</div>'
+                f'</div>'
+            )
+
+            if st.button(
+                f"💬 {t('open_conversation')}",
+                key=f"fc_{farmer.id}",
+                use_container_width=True
+            ):
+                st.session_state.selected_farmer = farmer.id
+                st.session_state.cons_section = "messages"
+                st.rerun()
 
 
 def profile(conseiller_id, username):
-    H(f'<div class="page-heading"><h2>👤 {esc(t("profile"))}</h2><p>{esc(t("profile_sub"))}</p></div><div class="card" style="padding:16px;margin-bottom:12px;"><div style="font-size:13px;font-weight:900;color:#173f2e;">{esc(username)}</div><div style="font-size:8px;color:#89948e;margin-top:4px;">Conseiller agricole</div></div>')
+    H(
+        f'<div class="page-heading">'
+        f'<h2>👤 {esc(t("profile"))}</h2>'
+        f'<p>{esc(t("profile_sub"))}</p>'
+        f'</div>'
+        f'<div class="card" style="padding:16px;margin-bottom:12px;">'
+        f'<div style="font-size:13px;font-weight:900;color:#173f2e;">'
+        f'{esc(username)}</div>'
+        f'<div style="font-size:8px;color:#89948e;margin-top:4px;">'
+        f'Conseiller agricole</div>'
+        f'</div>'
+    )
+
     with st.form("profile_form"):
-        p1 = st.text_input(t("new_password"), type="password")
-        p2 = st.text_input(t("confirm_password"), type="password")
-        if st.form_submit_button(t("save"), use_container_width=True):
+        p1 = st.text_input(
+            t("new_password"),
+            type="password"
+        )
+        p2 = st.text_input(
+            t("confirm_password"),
+            type="password"
+        )
+
+        if st.form_submit_button(
+            t("save"),
+            use_container_width=True
+        ):
             if p1 and p1 != p2:
                 st.error(t("password_mismatch"))
             elif p1:
                 from auth.login import hash_password
+
                 db = SessionLocal()
+
                 try:
-                    user = db.query(User).filter(User.id == conseiller_id).first()
+                    user = db.query(User).filter(
+                        User.id == conseiller_id
+                    ).first()
+
                     if user:
-                        user.password = hash_password(p1); db.commit(); st.success(t("updated"))
+                        user.password = hash_password(p1)
+                        db.commit()
+                        st.success(t("updated"))
+
                 finally:
                     db.close()
-            else: st.info(t("no_change"))
+            else:
+                st.info(t("no_change"))
+
 
 # ================================================================
 # ENTRY POINT
 # ================================================================
 def render_conseiller():
     conseiller_id = st.session_state.get("user_id")
+
     if not conseiller_id:
         st.error("Utilisateur non connecté.")
         return
+
     username = st.session_state.get("username", "")
+
     styles()
     set_direction()
+
     farmers = get_my_farmers(conseiller_id)
     products_list = get_my_products(conseiller_id)
     pubs = get_my_publications(conseiller_id)
     unread = get_unread_count(conseiller_id)
+
     nav(username, unread)
     topbar(username, unread)
+
     section = st.session_state.get("cons_section", "home")
-    if section == "home": home(conseiller_id, username, farmers, products_list, unread, pubs)
-    elif section == "messages": messages(conseiller_id, farmers)
-    elif section == "products": products(conseiller_id, products_list)
-    elif section == "publications": publications(conseiller_id, products_list, pubs)
-    elif section == "farmers": farmers_section(conseiller_id, farmers)
-    elif section == "profile": profile(conseiller_id, username)
+
+    if section == "home":
+        home(
+            conseiller_id,
+            username,
+            farmers,
+            products_list,
+            unread,
+            pubs
+        )
+
+    elif section == "messages":
+        messages(conseiller_id, farmers)
+
+    elif section == "products":
+        products(conseiller_id, products_list)
+
+    elif section == "publications":
+        publications(
+            conseiller_id,
+            products_list,
+            pubs
+        )
+
+    elif section == "farmers":
+        farmers_section(
+            conseiller_id,
+            farmers
+        )
+
+    elif section == "profile":
+        profile(
+            conseiller_id,
+            username
+        )
+
     else:
         st.session_state.cons_section = "home"
         st.rerun()
