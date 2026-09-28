@@ -1,15 +1,12 @@
 # view/dashboard_conseiller.py
 # Smart Filaha - Dashboard Conseiller
-
 import os
 import html
 import base64
 from textwrap import dedent
 from collections import Counter
-
 import streamlit as st
 from sqlalchemy import or_, and_
-
 from database.db import SessionLocal
 from database.models import Message, Product, User
 from config.settings import COLORS
@@ -23,9 +20,7 @@ from services.product_service import (
     create_product,
     save_product_image,
 )
-
 C = COLORS
-
 # ================================================================
 # PATHS / ASSETS
 # ================================================================
@@ -33,16 +28,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 LOGO_PATH = os.path.join(ASSETS_DIR, "logof.png")
 HERO_PATH = os.path.join(ASSETS_DIR, "images.jpg")
-
-
 def H(content):
     st.markdown(dedent(content), unsafe_allow_html=True)
-
-
 def esc(value):
     return html.escape("" if value is None else str(value))
-
-
 def fmt_date(value, with_time=True):
     if not value:
         return ""
@@ -50,8 +39,6 @@ def fmt_date(value, with_time=True):
         return value.strftime("%d/%m/%Y %H:%M" if with_time else "%d/%m/%Y")
     except Exception:
         return str(value)
-
-
 def resolve_file(path):
     if not path:
         return None
@@ -84,8 +71,6 @@ def resolve_file(path):
         if os.path.isfile(candidate):
             return candidate
     return None
-
-
 def image_data_uri(path):
     path = resolve_file(path)
     if not path:
@@ -104,11 +89,8 @@ def image_data_uri(path):
         return f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}"
     except Exception:
         return None
-
-
 LOGO_URI = image_data_uri(LOGO_PATH)
 HERO_URI = image_data_uri(HERO_PATH)
-
 # ================================================================
 # LANGUAGE
 # ================================================================
@@ -117,7 +99,6 @@ LANGS = {
     "العربية": "ar",
     "الدارجة المغربية": "darija",
 }
-
 TEXTS = {
     "fr": {
         "dashboard": "Tableau de bord",
@@ -354,16 +335,10 @@ TEXTS = {
         "article": "article",
     },
 }
-
-
 def current_lang():
     return st.session_state.get("ui_lang", "fr")
-
-
 def t(key):
     return TEXTS[current_lang()].get(key, TEXTS["fr"].get(key, key))
-
-
 def set_direction():
     rtl = current_lang() == "ar"
     H(f"""
@@ -372,8 +347,6 @@ def set_direction():
         .rtl-note {{ direction:{'rtl' if rtl else 'ltr'}; }}
     </style>
     """)
-
-
 # ================================================================
 # DB : MESSAGES
 # ================================================================
@@ -400,8 +373,6 @@ def get_my_farmers(conseiller_id):
         ).order_by(User.username.asc()).all()
     finally:
         db.close()
-
-
 def get_conversation(conseiller_id, farmer_id):
     db = SessionLocal()
     try:
@@ -419,8 +390,6 @@ def get_conversation(conseiller_id, farmer_id):
         ).order_by(Message.created_at.asc()).all()
     finally:
         db.close()
-
-
 def send_message(sender_id, receiver_id, content):
     if not content or not content.strip():
         return
@@ -434,8 +403,6 @@ def send_message(sender_id, receiver_id, content):
         db.commit()
     finally:
         db.close()
-
-
 def get_unread_count(conseiller_id):
     db = SessionLocal()
     try:
@@ -445,8 +412,6 @@ def get_unread_count(conseiller_id):
         ).count()
     finally:
         db.close()
-
-
 def mark_conversation_read(conseiller_id, farmer_id):
     db = SessionLocal()
     try:
@@ -458,8 +423,6 @@ def mark_conversation_read(conseiller_id, farmer_id):
         db.commit()
     finally:
         db.close()
-
-
 def get_latest_message(conseiller_id, farmer_id):
     db = SessionLocal()
     try:
@@ -477,8 +440,6 @@ def get_latest_message(conseiller_id, farmer_id):
         ).order_by(Message.created_at.desc()).first()
     finally:
         db.close()
-
-
 # ================================================================
 # DB : PRODUITS
 # ================================================================
@@ -490,8 +451,6 @@ def get_my_products(conseiller_id):
         ).order_by(Product.created_at.desc()).all()
     finally:
         db.close()
-
-
 def add_product(conseiller_id, name, description, price, stock, image_path=None):
     create_product(
         conseiller_id=conseiller_id,
@@ -501,8 +460,6 @@ def add_product(conseiller_id, name, description, price, stock, image_path=None)
         stock=stock,
         image_path=image_path,
     )
-
-
 def delete_product(product_id):
     db = SessionLocal()
     try:
@@ -512,25 +469,20 @@ def delete_product(product_id):
             db.commit()
     finally:
         db.close()
-
-
 # ================================================================
 # DESIGN
 # ================================================================
 def styles():
     hero = f"url('{HERO_URI}')" if HERO_URI else "none"
     logo = f"url('{LOGO_URI}')" if LOGO_URI else "none"
-
     H(f"""
     <style>
-
     #MainMenu, footer, [data-testid="stDecoration"] {{ visibility:hidden; }}
     [data-testid="stAppViewContainer"] {{ background:#f4f7f4; }}
     [data-testid="stHeader"] {{ background:transparent; }}
     .block-container {{ max-width:1460px!important; padding:20px 30px 55px!important; }}
     div[data-testid="stVerticalBlock"] {{ gap:0.65rem; }}
     a {{ text-decoration:none!important; }}
-
     section[data-testid="stSidebar"] {{
         background:#073e2c!important;
         width:238px!important;
@@ -561,7 +513,6 @@ def styles():
         outline:none!important;
         box-shadow:none!important;
     }}
-
     .brand {{ padding:4px 5px 18px; border-bottom:1px solid rgba(255,255,255,.13); margin-bottom:18px; }}
     .brand-logo {{ width:100%; height:105px; background-image:{logo}; background-repeat:no-repeat; background-position:center; background-size:contain; }}
     .brand-fallback {{ font-size:18px; font-weight:900; color:white; padding:25px 5px; }}
@@ -569,7 +520,6 @@ def styles():
     .side-account {{ margin-top:34px; padding:13px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.055); border-radius:14px; }}
     .side-account-name {{ font-size:11px; font-weight:900; }}
     .side-account-role {{ font-size:8px; color:#9ec4b1; margin-top:4px; }}
-
     .topbar {{ background:white; border:1px solid #dfe9e2; border-radius:16px; min-height:58px; padding:8px 12px; display:flex; align-items:center; gap:13px; box-shadow:0 5px 20px rgba(20,65,44,.06); margin-bottom:16px; }}
     .top-brand {{ display:none; width:160px; min-width:160px; height:40px; background-image:{logo}; background-repeat:no-repeat; background-position:left center; background-size:contain; }}
     .top-search {{ flex:1; height:38px; border:1px solid #e0e8e3; background:#f7faf8; border-radius:11px; display:flex; align-items:center; padding:0 13px; color:#9aa69f; font-size:10px; }}
@@ -579,15 +529,18 @@ def styles():
     .top-user-role {{ font-size:7px; color:#89958e; margin-top:2px; }}
     .notif {{ position:relative; width:34px; height:34px; border-radius:10px; background:#f1f6f3; display:flex; align-items:center; justify-content:center; font-size:14px; }}
     .badge {{ position:absolute; top:-4px; right:-4px; background:#d7434f; color:white; border-radius:10px; min-width:16px; height:16px; font-size:8px; display:flex; align-items:center; justify-content:center; font-weight:900; }}
-
-    div[data-testid="stRadio"] {{ margin:0 0 14px!important; }}
-    div[data-testid="stRadio"] label {{ font-size:10px!important; font-weight:800!important; }}
-
-    @media (min-width:901px) {{
-        div[data-testid="stRadio"] {{ display:none!important; }}
+    .st-key-cons_mobile_nav {{ display:none; }}
+    .st-key-cons_mobile_nav [data-testid="stColumn"],
+    .st-key-cons_mobile_nav [data-testid="column"] {{ padding:0!important; }}
+    .st-key-cons_mobile_nav .stButton {{ margin-bottom:6px!important; }}
+    .st-key-cons_mobile_nav .stButton>button {{ min-height:44px!important; font-size:10px!important; white-space:normal!important; }}
+    .st-key-cons_mobile_nav button[kind="primary"],
+    .st-key-cons_mobile_nav button[data-testid="stBaseButton-primary"] {{
+        background:#116641!important; color:white!important; border-color:#116641!important;
     }}
     @media (max-width:900px) {{
         section[data-testid="stSidebar"] {{ display:none!important; }}
+        .st-key-cons_mobile_nav {{ display:block!important; }}
         .block-container {{ max-width:100%!important; padding:12px 12px 35px!important; }}
         .topbar {{ padding:9px 10px; gap:8px; min-height:auto; }}
         .top-brand {{ display:block; width:115px; min-width:115px; height:34px; }}
@@ -621,7 +574,6 @@ def styles():
         .stock-ok, .stock-low {{ font-size:8px!important; }}
         .pub-image {{ max-height:360px!important; }}
     }}
-
     .hero {{ height:190px; border-radius:20px; overflow:hidden; position:relative; margin-bottom:17px; background-image: linear-gradient(90deg, rgba(3,57,40,.94) 0%, rgba(5,100,66,.80) 55%, rgba(4,75,51,.43) 100%), {hero}; background-size:cover; background-position:center; box-shadow:0 10px 28px rgba(13,74,49,.13); display:flex; align-items:center; }}
     .hero:after {{ content:""; position:absolute; right:-80px; top:-100px; width:330px; height:330px; border-radius:50%; background:rgba(255,255,255,.07); }}
     .hero-inner {{ padding:28px 32px; position:relative; z-index:2; }}
@@ -629,7 +581,6 @@ def styles():
     .hero-title {{ font-size:27px; color:white; font-weight:900; line-height:1.15; }}
     .hero-sub {{ font-size:10px; color:#d8eee2; margin-top:9px; line-height:1.5; max-width:760px; }}
     .hero-pill {{ display:inline-block; margin-top:15px; padding:7px 11px; border-radius:20px; background:rgba(255,255,255,.13); border:1px solid rgba(255,255,255,.18); color:#f2fbf5; font-size:8px; font-weight:800; }}
-
     .stat-card {{ background:white; border:1px solid #dfe8e1; border-radius:15px; padding:15px 16px; min-height:108px; box-shadow:0 5px 18px rgba(22,65,45,.045); transition:transform .16s ease,box-shadow .16s ease; }}
     .stat-card:hover {{ transform:translateY(-2px); box-shadow:0 9px 22px rgba(22,65,45,.08); }}
     .stat-head {{ display:flex; justify-content:space-between; align-items:center; }}
@@ -637,13 +588,11 @@ def styles():
     .stat-live {{ font-size:7px; color:#278457; background:#eaf7ee; padding:5px 7px; border-radius:20px; font-weight:900; }}
     .stat-value {{ font-size:24px; font-weight:900; color:#153d2d; margin-top:10px; line-height:1; }}
     .stat-label {{ font-size:8px; color:#77857d; margin-top:6px; }}
-
     .section-row {{ display:flex; align-items:flex-end; justify-content:space-between; margin:20px 0 9px; }}
     .section-title {{ font-size:13px; font-weight:900; color:#173f2f; }}
     .section-sub {{ font-size:8px; color:#909b95; margin-top:3px; }}
     .section-link {{ font-size:8px; color:#27764f; font-weight:900; }}
     .card {{ background:white; border:1px solid #dfe8e1; border-radius:15px; box-shadow:0 5px 18px rgba(22,65,45,.035); }}
-
     .feature {{ display:grid; grid-template-columns:54% 46%; min-height:330px; overflow:hidden; }}
     .feature-image {{ width:100%; height:100%; min-height:330px; object-fit:cover; display:block; }}
     .feature-copy {{ padding:25px; display:flex; flex-direction:column; justify-content:center; }}
@@ -652,13 +601,11 @@ def styles():
     .feature-body {{ font-size:9px; line-height:1.65; color:#66756d; margin-top:9px; }}
     .feature-meta {{ font-size:7px; color:#9aa49f; margin-top:13px; }}
     .right-card {{ padding:16px; min-height:330px; }}
-
     .activity-bars {{ height:190px; display:flex; align-items:end; gap:10px; padding:18px 7px 7px; border-bottom:1px solid #edf1ee; }}
     .bar-col {{ flex:1; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:6px; }}
     .bar {{ width:100%; max-width:24px; border-radius:7px 7px 3px 3px; background:linear-gradient(180deg,#51b57c,#17724a); min-height:5px; }}
     .bar-label {{ font-size:7px; color:#909b95; }}
     .legend {{ font-size:7px; color:#849089; margin-top:8px; }}
-
     .conversation-card {{ padding:10px 14px; }}
     .conversation-item {{ display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid #edf1ee; }}
     .conversation-item:last-child {{ border-bottom:0; }}
@@ -667,7 +614,6 @@ def styles():
     .conv-name {{ font-size:9px; font-weight:900; color:#244d3a; }}
     .conv-msg {{ font-size:8px; color:#7d8982; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }}
     .conv-time {{ font-size:7px; color:#9aa49f; }}
-
     .product-card {{ overflow:hidden; background:white; border:1px solid #dfe8e1; border-radius:14px; box-shadow:0 5px 18px rgba(22,65,45,.035); height:100%; }}
     .product-img {{ width:100%; height:155px; object-fit:cover; display:block; background:#edf5ef; }}
     .product-placeholder {{ height:155px; background:linear-gradient(135deg,#edf6ef,#dfeee4); display:flex; align-items:center; justify-content:center; font-size:34px; color:#6ca27f; }}
@@ -678,17 +624,14 @@ def styles():
     .price {{ font-size:10px; font-weight:900; color:#19704a; }}
     .stock-ok {{ font-size:7px; color:#278457; background:#e8f6ed; padding:4px 7px; border-radius:20px; font-weight:900; white-space:nowrap; }}
     .stock-low {{ font-size:7px; color:#ad741d; background:#fff3dc; padding:4px 7px; border-radius:20px; font-weight:900; white-space:nowrap; }}
-
     .page-heading {{ margin:5px 0 18px; }}
     .page-heading h2 {{ font-size:22px; color:#153f2e; font-weight:900; margin:0; }}
     .page-heading p {{ font-size:9px; color:#89948e; margin:5px 0 0; }}
-
     .pub-card {{ background:white; border:1px solid #dfe8e1; border-radius:15px; padding:17px; margin-bottom:12px; box-shadow:0 4px 16px rgba(22,65,45,.03); }}
     .pub-title {{ font-size:15px; font-weight:900; color:#173f2e; }}
     .pub-meta {{ font-size:8px; color:#919c96; margin-top:5px; }}
     .pub-body {{ font-size:10px; color:#53635b; line-height:1.6; margin-top:9px; }}
     .pub-image {{ width:100%; max-height:430px; object-fit:cover; border-radius:11px; margin-top:12px; display:block; }}
-
     .chat-shell {{ background:white; border:1px solid #dfe8e1; border-radius:15px; overflow:hidden; }}
     .chat-header {{ padding:15px 17px; border-bottom:1px solid #e8ede9; display:flex; align-items:center; gap:10px; }}
     .chat-title {{ font-size:12px; font-weight:900; color:#173f2e; }}
@@ -697,69 +640,68 @@ def styles():
     .chat-bubble {{ padding:10px 12px; border-radius:14px; max-width:76%; font-size:9px; line-height:1.55; margin-bottom:10px; word-break:break-word; }}
     .chat-mine {{ margin-left:auto; background:#116641; color:white; border-bottom-right-radius:5px; }}
     .chat-other {{ margin-right:auto; background:#e4eee8; color:#29463a; border-bottom-left-radius:5px; }}
-
     .stButton>button {{ border:1px solid #d7e3db!important; border-radius:10px!important; background:white!important; color:#285340!important; font-size:9px!important; font-weight:800!important; min-height:34px!important; box-shadow:none!important; transition:.15s ease; }}
     .stButton>button:hover {{ border-color:#8db8a0!important; color:#0b6540!important; background:#f6fbf8!important; }}
     .stTextInput input, .stTextArea textarea, div[data-baseweb="select"]>div {{ border-radius:10px!important; border-color:#d7e3db!important; background:white!important; font-size:10px!important; }}
     div[data-testid="stForm"] {{ border:1px solid #dfe8e1!important; border-radius:13px!important; padding:12px!important; background:white!important; }}
     .stFileUploader {{ font-size:9px!important; }}
     .lang-label {{ font-size:7px; color:#718078; margin-bottom:2px; }}
-
     </style>
     """)
-
-
 # ================================================================
 # NAVIGATION — source de vérité unique
 # ================================================================
-MOBILE_NAV_ITEMS = [
-    ("🏠 Accueil", "home"),
-    ("📢 Publications", "publications"),
-    ("🛒 Produits", "products"),
-    ("💬 Messages", "messages"),
-    ("👥 Agriculteurs", "farmers"),
-    ("👤 Profil", "profile"),
+NAV_ITEMS = [
+    ("home",         "🏠", "Tableau de bord"),
+    ("publications", "📢", "Mes publications"),
+    ("products",     "🛒", "Mes produits"),
+    ("messages",     "💬", "Mes messages"),
+    ("farmers",      "👥", "Mes agriculteurs"),
+    ("profile",      "👤", "Mon profil"),
 ]
-
-MOBILE_LABEL_BY_SECTION = {section: label for label, section in MOBILE_NAV_ITEMS}
-MOBILE_SECTION_BY_LABEL = {label: section for label, section in MOBILE_NAV_ITEMS}
+VALID_SECTIONS = {s for s, _, _ in NAV_ITEMS}
 
 
 def go_to_section(section):
-    valid = {"home", "publications", "products", "messages", "farmers", "profile"}
-    if section not in valid:
+    if section not in VALID_SECTIONS:
         section = "home"
     st.session_state.cons_section = section
-    st.session_state.mobile_cons_nav = MOBILE_LABEL_BY_SECTION.get(
-        section, MOBILE_LABEL_BY_SECTION["home"]
-    )
 
 
 def nav(username, unread):
-    items = [
-        ("home",         "🏠 Tableau de bord"),
-        ("publications", "📢 Mes publications"),
-        ("products",     "🛒 Mes produits"),
-        ("messages",     "💬 Mes messages"),
-        ("farmers",      "👥 Mes agriculteurs"),
-        ("profile",      "👤 Mon profil"),
-    ]
+    """Sidebar - PC uniquement."""
     with st.sidebar:
         if LOGO_URI:
             H('<div class="brand"><div class="brand-logo"></div></div>')
         else:
             H('<div class="brand"><div class="brand-fallback">🌱 SMART FILAHA</div></div>')
-
         H('<div class="nav-caption">Navigation</div>')
-
-        for section, label in items:
+        for section, icon, label in NAV_ITEMS:
             st.button(
-                label,
+                f"{icon} {label}",
                 key=f"desktop_nav_{section}",
                 use_container_width=True,
                 on_click=go_to_section,
                 args=(section,),
             )
+
+
+def mobile_nav():
+    """Menu boutons - téléphone uniquement (caché sur PC par CSS)."""
+    current = st.session_state.get("cons_section", "home")
+    with st.container(key="cons_mobile_nav"):
+        for i in range(0, len(NAV_ITEMS), 2):
+            cols = st.columns(2, gap="small")
+            for col, (section, icon, label) in zip(cols, NAV_ITEMS[i:i + 2]):
+                with col:
+                    st.button(
+                        f"{icon} {label}",
+                        key=f"mobile_nav_{section}",
+                        use_container_width=True,
+                        on_click=go_to_section,
+                        args=(section,),
+                        type="primary" if section == current else "secondary",
+                    )
 
 
 def topbar(username, unread):
@@ -778,27 +720,7 @@ def topbar(username, unread):
     </div>
     """)
 
-    labels = [label for label, _ in MOBILE_NAV_ITEMS]
-
-    if "mobile_cons_nav" not in st.session_state:
-        current_section = st.session_state.get("cons_section", "home")
-        st.session_state.mobile_cons_nav = MOBILE_LABEL_BY_SECTION.get(
-            current_section, MOBILE_LABEL_BY_SECTION["home"]
-        )
-
-    def sync_mobile_nav():
-        chosen = st.session_state.get("mobile_cons_nav")
-        if chosen in MOBILE_SECTION_BY_LABEL:
-            st.session_state.cons_section = MOBILE_SECTION_BY_LABEL[chosen]
-
-    st.radio(
-        "Navigation mobile",
-        labels,
-        horizontal=True,
-        label_visibility="collapsed",
-        key="mobile_cons_nav",
-        on_change=sync_mobile_nav,
-    )
+    mobile_nav()
 
     lc1, lc2 = st.columns([8.6, 1.4])
     with lc2:
@@ -814,10 +736,6 @@ def topbar(username, unread):
         )
         if LANGS[new_lang] != current_lang():
             st.session_state.ui_lang = LANGS[new_lang]
-            current_section = st.session_state.get("cons_section", "home")
-            st.session_state.mobile_cons_nav = MOBILE_LABEL_BY_SECTION.get(
-                current_section, MOBILE_LABEL_BY_SECTION["home"]
-            )
             st.rerun()
 
 
@@ -829,13 +747,10 @@ def _product_image(product):
     if uri:
         return f'<img class="product-img" src="{uri}" alt="Produit">'
     return '<div class="product-placeholder">🌱</div>'
-
-
 def _publication_bars(pubs):
     days_fr = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
     days_ar = ["اث", "ثل", "أر", "خم", "جم", "سب", "أح"]
     days = days_ar if current_lang() == "ar" else days_fr
-
     counts = Counter()
     for p in pubs:
         dt = getattr(p, "created_at", None)
@@ -844,10 +759,8 @@ def _publication_bars(pubs):
                 counts[dt.weekday()] += 1
             except Exception:
                 pass
-
     values = [counts[i] for i in range(7)]
     maximum = max(values) if any(values) else 1
-
     return "".join(
         f'<div class="bar-col">'
         f'<div class="bar" style="height:{max(6, int((v / maximum) * 112))}px"></div>'
@@ -855,8 +768,6 @@ def _publication_bars(pubs):
         f'</div>'
         for d, v in zip(days, values)
     )
-
-
 def _conversation_preview(conseiller_id, farmers):
     result = []
     for farmer in farmers:
@@ -867,8 +778,6 @@ def _conversation_preview(conseiller_id, farmers):
         reverse=True
     )
     return result
-
-
 # ================================================================
 # HOME
 # ================================================================
@@ -883,14 +792,12 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
         </div>
     </div>
     """)
-
     stats = [
         ("📢", len(pubs),          t("pubs"),           t("content")),
         ("🛒", len(products_list), t("products_short"), t("catalog_current")),
         ("💬", unread,             t("messages_short"), t("farmers_contact")),
         ("👥", len(farmers),       t("farmers_short"),  t("contact")),
     ]
-
     cols = st.columns(4, gap="medium")
     for col, (icon, value, label, note) in zip(cols, stats):
         with col:
@@ -904,9 +811,7 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
                 f'<div class="stat-label">{esc(label)} · {esc(note)}</div>'
                 f'</div>'
             )
-
     left, right = st.columns([1.65, 1], gap="medium")
-
     # ── recent pub
     recent = None
     if pubs:
@@ -915,7 +820,6 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
             key=lambda p: getattr(p, "created_at", None) or 0,
             reverse=True
         )[0]
-
     with left:
         H(
             f'<div class="section-row">'
@@ -926,7 +830,6 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
             f'<div class="section-link">{esc(t("all_pubs"))}</div>'
             f'</div>'
         )
-
         if recent:
             uri = image_data_uri(getattr(recent, "image_path", None))
             image_html = (
@@ -937,7 +840,6 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
             # ── FIX: calcul date avant f-string
             recent_date = fmt_date(getattr(recent, "created_at", None))
             recent_type = esc(getattr(recent, "publication_type", t("article"))).upper()
-
             H(f"""
             <div class="card feature">
                 {image_html}
@@ -955,11 +857,9 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
                 f'📢<br><br>{esc(t("no_pub"))}'
                 f'</div>'
             )
-
         if st.button(f"{t('all_pubs')} →", key="all_pubs_home"):
             go_to_section("publications")
             st.rerun()
-
     with right:
         H(
             f'<div class="section-row">'
@@ -970,7 +870,6 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
             f'<div class="section-link">{esc(t("week"))}</div>'
             f'</div>'
         )
-
         H(
             f'<div class="card right-card">'
             f'<div class="section-title" style="font-size:9px;">{esc(t("recent_pubs"))}</div>'
@@ -979,7 +878,6 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
             f'<div class="legend">● Publications</div>'
             f'</div>'
         )
-
         H(
             f'<div class="section-row" style="margin-top:14px;">'
             f'<div>'
@@ -989,7 +887,6 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
             f'</div>'
             f'<div class="card conversation-card">'
         )
-
         conversations = _conversation_preview(conseiller_id, farmers)[:4]
         if conversations:
             for farmer, message in conversations:
@@ -1008,13 +905,10 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
                 )
         else:
             H(f'<div style="padding:24px;text-align:center;color:#89948e;font-size:8px;">{esc(t("no_conv"))}</div>')
-
         H('</div>')
-
         if st.button(f"{t('open_messages')} →", key="open_msg_home"):
             go_to_section("messages")
             st.rerun()
-
     H(
         f'<div class="section-row" style="margin-top:20px;">'
         f'<div>'
@@ -1024,7 +918,6 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
         f'<div class="section-link">{esc(t("catalog"))}</div>'
         f'</div>'
     )
-
     if not products_list:
         H(f'<div class="card" style="padding:35px;text-align:center;color:#89948e;font-size:9px;">🛒<br><br>{esc(t("no_product"))}</div>')
     else:
@@ -1048,12 +941,9 @@ def home(conseiller_id, username, farmers, products_list, unread, pubs):
                     f'</div>'
                     f'</div>'
                 )
-
     if st.button(f"{t('manage_products')} →", key="manage_prod_home"):
         go_to_section("products")
         st.rerun()
-
-
 # ================================================================
 # MESSAGES
 # ================================================================
@@ -1064,17 +954,13 @@ def messages(conseiller_id, farmers):
         f'<p>{esc(t("messages_page_sub"))}</p>'
         f'</div>'
     )
-
     if not farmers:
         H(f'<div class="card" style="padding:70px;text-align:center;color:#89948e;font-size:9px;">💬<br><br>{esc(t("no_conv"))}</div>')
         return
-
     ids = {farmer.id for farmer in farmers}
     if st.session_state.get("selected_farmer") not in ids:
         st.session_state.selected_farmer = farmers[0].id
-
     left, right = st.columns([.9, 2], gap="medium")
-
     with left:
         H(
             f'<div class="section-title" style="margin:4px 0 9px;">{esc(t("conversations_page"))}</div>'
@@ -1091,12 +977,10 @@ def messages(conseiller_id, farmers):
                 st.session_state.selected_farmer = farmer.id
                 st.rerun()
         H('</div>')
-
     fid = st.session_state.selected_farmer
     selected = next((f for f in farmers if f.id == fid), farmers[0])
     mark_conversation_read(conseiller_id, fid)
     conv = get_conversation(conseiller_id, fid)
-
     with right:
         H(
             f'<div class="chat-shell">'
@@ -1109,16 +993,13 @@ def messages(conseiller_id, farmers):
             f'</div>'
             f'<div class="chat-body">'
         )
-
         if not conv:
             H(f'<div style="text-align:center;padding:100px 10px;color:#89948e;font-size:9px;">{esc(t("no_messages"))}</div>')
         else:
             for message in conv:
                 cls = "chat-mine" if message.sender_id == conseiller_id else "chat-other"
                 H(f'<div class="chat-bubble {cls}">{esc(message.content)}</div>')
-
         H('</div></div>')
-
         with st.form(f"reply_{fid}", clear_on_submit=True):
             text = st.text_input(
                 "message",
@@ -1128,8 +1009,6 @@ def messages(conseiller_id, farmers):
             if st.form_submit_button(t("send"), use_container_width=True) and text.strip():
                 send_message(conseiller_id, fid, text)
                 st.rerun()
-
-
 # ================================================================
 # PRODUCTS
 # ================================================================
@@ -1140,7 +1019,6 @@ def products(conseiller_id, items):
         f'<p>{esc(t("products_page_sub"))}</p>'
         f'</div>'
     )
-
     with st.expander(f"➕ {t('add_product')}"):
         n = st.text_input(t("product_name"), key="pn")
         d = st.text_area(t("description"), key="pd")
@@ -1154,7 +1032,6 @@ def products(conseiller_id, items):
             price = st.number_input(t("price"), min_value=0.0, step=1.0, key="pp")
         with c2:
             stock = st.number_input(t("stock"), min_value=0, step=1, key="ps")
-
         if st.button(t("add"), key="addp", use_container_width=True):
             if n.strip() and price > 0:
                 image_path = save_product_image(product_image) if product_image else None
@@ -1163,11 +1040,9 @@ def products(conseiller_id, items):
                 st.rerun()
             else:
                 st.warning(t("fill_name_price"))
-
     if not items:
         H(f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">🛒<br><br>{esc(t("no_product"))}</div>')
         return
-
     cols = st.columns(3, gap="medium")
     for i, product in enumerate(items):
         with cols[i % 3]:
@@ -1175,7 +1050,6 @@ def products(conseiller_id, items):
             stock_cls = "stock-ok" if stock > 5 else "stock-low"
             stock_text = t("stock_ok") if stock > 5 else t("stock_low")
             price_val = float(getattr(product, "price", 0) or 0)
-
             H(
                 f'<div class="product-card">'
                 f'{_product_image(product)}'
@@ -1190,7 +1064,6 @@ def products(conseiller_id, items):
                 f'</div>'
                 f'</div>'
             )
-
             if st.button(f"📢 {t('publish')}", key=f"publish_product_{product.id}", use_container_width=True):
                 product_title = str(getattr(product, "name", "") or "").strip()
                 product_description = str(getattr(product, "description", "") or "").strip()
@@ -1208,12 +1081,9 @@ def products(conseiller_id, items):
                     st.success(t("pub_created"))
                     go_to_section("publications")
                     st.rerun()
-
             if st.button(f"🗑️ {t('delete')}", key=f"dp_{product.id}", use_container_width=True):
                 delete_product(product.id)
                 st.rerun()
-
-
 # ================================================================
 # PUBLICATIONS
 # ================================================================
@@ -1224,13 +1094,11 @@ def publications(conseiller_id, products_list, pubs):
         f'<p>{esc(t("pub_page_sub"))}</p>'
         f'</div>'
     )
-
     with st.expander(f"➕ {t('new_pub')}"):
         title = st.text_input(t("title"), key="pt")
         typ = st.selectbox(t("type"), ["conseil", "article", "annonce", "produit"], key="pty")
         content = st.text_area(t("description"), key="pc")
         image = st.file_uploader(t("image_optional"), type=["jpg", "jpeg", "png"], key="pi")
-
         linked = None
         if typ == "produit" and products_list:
             mapping = {p.id: p.name for p in products_list}
@@ -1240,7 +1108,6 @@ def publications(conseiller_id, products_list, pubs):
                 format_func=lambda x: mapping[x],
                 key="pl"
             )
-
         if st.button(t("publish"), key="pubbtn", use_container_width=True):
             if title.strip() and content.strip():
                 path = save_publication_image(image) if image else None
@@ -1252,17 +1119,14 @@ def publications(conseiller_id, products_list, pubs):
                 st.rerun()
             else:
                 st.warning(t("fill_title_content"))
-
     if not pubs:
         H(f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">📢<br><br>{esc(t("no_pub"))}</div>')
         return
-
     for publication in pubs:
         uri = image_data_uri(getattr(publication, "image_path", None))
         image_html = f'<img class="pub-image" src="{uri}" alt="Publication">' if uri else ""
         # ── FIX: calcul date avant f-string
         pub_date = fmt_date(getattr(publication, "created_at", None))
-
         H(
             f'<div class="pub-card">'
             f'<div class="pub-title">{esc(publication.title)}</div>'
@@ -1273,12 +1137,9 @@ def publications(conseiller_id, products_list, pubs):
             f'{image_html}'
             f'</div>'
         )
-
         if st.button(f"🗑️ {t('delete')}", key=f"dpub_{publication.id}"):
             delete_publication(publication.id, conseiller_id)
             st.rerun()
-
-
 # ================================================================
 # FARMERS
 # ================================================================
@@ -1289,11 +1150,9 @@ def farmers_section(conseiller_id, farmers):
         f'<p>{esc(t("farmers_page_sub"))}</p>'
         f'</div>'
     )
-
     if not farmers:
         H(f'<div class="card" style="padding:45px;text-align:center;color:#89948e;font-size:9px;">{esc(t("no_conv"))}</div>')
         return
-
     cols = st.columns(3, gap="medium")
     for i, farmer in enumerate(farmers):
         with cols[i % 3]:
@@ -1308,8 +1167,6 @@ def farmers_section(conseiller_id, farmers):
                 st.session_state.selected_farmer = farmer.id
                 go_to_section("messages")
                 st.rerun()
-
-
 # ================================================================
 # PROFILE
 # ================================================================
@@ -1324,7 +1181,6 @@ def profile(conseiller_id, username):
         f'<div style="font-size:8px;color:#89948e;margin-top:4px;">Conseiller agricole</div>'
         f'</div>'
     )
-
     with st.form("profile_form"):
         p1 = st.text_input(t("new_password"), type="password")
         p2 = st.text_input(t("confirm_password"), type="password")
@@ -1344,8 +1200,6 @@ def profile(conseiller_id, username):
                     db.close()
             else:
                 st.info(t("no_change"))
-
-
 # ================================================================
 # ENTRY POINT
 # ================================================================
@@ -1354,22 +1208,16 @@ def render_conseiller():
     if not conseiller_id:
         st.error("Utilisateur non connecté.")
         return
-
     username = st.session_state.get("username", "")
-
     styles()
     set_direction()
-
     farmers      = get_my_farmers(conseiller_id)
     products_list = get_my_products(conseiller_id)
     pubs         = get_my_publications(conseiller_id)
     unread       = get_unread_count(conseiller_id)
-
     nav(username, unread)
     topbar(username, unread)
-
     section = st.session_state.get("cons_section", "home")
-
     if section == "home":
         home(conseiller_id, username, farmers, products_list, unread, pubs)
     elif section == "messages":
