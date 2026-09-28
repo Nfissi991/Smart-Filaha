@@ -450,6 +450,9 @@ def styles():
 # NAVIGATION / TOPBAR
 # ================================================================
 def nav(username, unread):
+    def go_to_section(section):
+        st.session_state.cons_section = section
+
     with st.sidebar:
         if LOGO_URI:
             H(f'<div class="brand"><div class="brand-logo"></div></div>')
@@ -465,9 +468,13 @@ def nav(username, unread):
             label = f"{icon}  {t(key)}"
             if section == "messages" and unread:
                 label += f"   • {unread}"
-            if st.button(label, key=button_key, use_container_width=True):
-                st.session_state.cons_section = section
-                st.rerun()
+            st.button(
+                label,
+                key=button_key,
+                use_container_width=True,
+                on_click=go_to_section,
+                args=(section,),
+            )
         H(f'<div class="side-account"><div class="side-account-name">👨‍🌾 {esc(username)}</div><div class="side-account-role">Conseiller agricole</div></div>')
         if st.button(f"🚪  {t('logout')}", key="n_logout", use_container_width=True):
             from auth.login import logout
@@ -814,4 +821,3 @@ def render_conseiller():
     else:
         st.session_state.cons_section = "home"
         st.rerun()
-
