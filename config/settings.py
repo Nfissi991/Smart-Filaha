@@ -36,7 +36,9 @@ LANGUAGES = ["دارجة", "العربية", "Français", "English"]
 # ── DB ──
 DB_URL = os.getenv("DATABASE_URL", "sqlite:///plant_detector.db")
 if DB_URL.startswith("postgres://"):
-    DB_URL = DB_URL.replace("postgres://", "postgresql://", 1)
+    DB_URL = DB_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+elif DB_URL.startswith("postgresql://"):
+    DB_URL = DB_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 # ── Modèle ──
 MODEL_PATH      = "archive_best_model.h5"
