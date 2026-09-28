@@ -1,7 +1,5 @@
 # view/publications.py
-import base64
 import html
-import mimetypes
 import os
 
 import streamlit as st
@@ -28,8 +26,16 @@ CSS = """
     display: flex; align-items: center; justify-content: center;
     overflow: hidden;
 }
-.pub-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .pub-img .pub-noimg { font-size: 54px; opacity: .35; }
+[class*="st-key-pubimg_"] [data-testid="stImage"] { width: 100% !important; }
+[class*="st-key-pubimg_"] img {
+    width: 100% !important;
+    height: 260px !important;
+    object-fit: contain !important;
+    background: #f4f7f5;
+    border: 1px solid #e3ebe6;
+    border-radius: 14px;
+}
 .pub-title { font-size: 22px; font-weight: 800; color: #18362A; margin: 2px 0 8px; line-height: 1.25; }
 .pub-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .pub-author { display: flex; align-items: center; gap: 8px; }
@@ -43,25 +49,21 @@ CSS = """
                margin: 4px 0 10px; }
 .pub-date { color: #93a29a; font-size: 12px; }
 @media (max-width: 900px) {
-    .pub-img { height: 220px; }
+    .pub-img, [class*="st-key-pubimg_"] img { height: 220px !important; }
     .pub-title { font-size: 19px; }
 }
 </style>
 """
 
 
-@st.cache_data(show_spinner=False)
-def _image_src(path):
-    """Retourne une source utilisable dans <img> (URL ou data URI), ou None."""
+def _valid_image(path):
+    """Retourne le chemin/URL si l'image est utilisable, sinon None."""
     if not path:
         return None
-    if str(path).startswith(("http://", "https://", "data:")):
+    path = str(path)
+    if path.startswith(("http://", "https://")):
         return path
-    if not os.path.exists(path):
-        return None
-    mime = mimetypes.guess_type(path)[0] or "image/jpeg"
-    with open(path, "rb") as f:
-        return f"data:{mime};base64,{base64.b64encode(f.read()).decode()}"
+    return path if os.path.exists(path) else None
 
 
 def _get_product(product_id):
@@ -96,19 +98,23 @@ def render_publications():
             ("📌 Publication", "#eef2ef", "#3b5a4a"),
         )
         product = _get_product(publication.product_id)
-        src = _image_src(publication.image_path) or (
-            _image_src(product.image_path) if product else None
+        img = _valid_image(publication.image_path) or (
+            _valid_image(product.image_path) if product else None
         )
 
         with st.container(border=True):
             col_img, col_txt = st.columns([1, 1.6], gap="medium")
 
             with col_img:
-                if src:
-                    st.markdown(
-                        f'<div class="pub-img"><img src="{html.escape(src, quote=True)}"></div>',
-                        unsafe_allow_html=True,
-                    )
+                if img:
+                    with st.container(key=f"pubimg_{publication.id}"):
+                        try:
+                            st.image(img, use_container_width=True)
+                        except Exception:
+                            st.markdown(
+                                '<div class="pub-img"><span class="pub-noimg">🌿</span></div>',
+                                unsafe_allow_html=True,
+                            )
                 else:
                     st.markdown(
                         '<div class="pub-img"><span class="pub-noimg">🌿</span></div>',
