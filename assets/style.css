@@ -1,0 +1,143 @@
+/* assets/style.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+[data-testid="stAppViewContainer"] { background: #F5F0E8; }
+[data-testid="stHeader"]           { background: transparent; }
+.block-container { padding: 0 !important; max-width: 100% !important; }
+
+/* sidebar */
+[data-testid="stSidebar"] {
+    background: #FDFAF4 !important;
+    border-right: 1px solid #DDD5C0 !important;
+}
+[data-testid="stSidebar"] .stButton > button {
+    background: transparent !important;
+    color: #1C3A2F !important;
+    border: 1px solid #DDD5C0 !important;
+    border-radius: 8px !important;
+    text-align: left !important;
+    font-size: 13px !important;
+    margin-bottom: 4px !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: #F0EBE0 !important;
+    border-color: #C4B89A !important;
+}
+
+/* bouton principal */
+.stButton > button {
+    background: #2D5240 !important;
+    color: #E8DFC8 !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 12px 28px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    width: 100% !important;
+    transition: background 0.2s !important;
+}
+.stButton > button:hover { background: #1C3A2F !important; }
+
+/* inputs */
+.stTextInput > div > div > input {
+    background: #F0EBE0 !important;
+    border-color: #DDD5C0 !important;
+    border-radius: 8px !important;
+    color: #1C3A2F !important;
+}
+
+/* selectbox */
+div[data-baseweb="select"] > div {
+    background: #F0EBE0 !important;
+    border-color: #C4B89A !important;
+    border-radius: 8px !important;
+    color: #3D2E1E !important;
+    font-size: 13px !important;
+}
+
+/* tabs */
+[data-baseweb="tab-list"]  { background: transparent !important; gap: 4px; }
+[data-baseweb="tab"] {
+    background: #F0EBE0 !important;
+    border-radius: 8px 8px 0 0 !important;
+    color: #7A6E5C !important;
+    font-size: 13px !important;
+    padding: 8px 18px !important;
+    border: 1px solid #DDD5C0 !important;
+    border-bottom: none !important;
+}
+[aria-selected="true"][data-baseweb="tab"] {
+    background: #FDFAF4 !important;
+    color: #1C3A2F !important;
+    font-weight: 600 !important;
+}
+[data-baseweb="tab-panel"] {
+    background: #FDFAF4 !important;
+    border: 1px solid #DDD5C0 !important;
+    border-radius: 0 10px 10px 10px !important;
+    padding: 20px !important;
+}
+
+/* result cards */
+.result-disease {
+    background: #F0EBE0;
+    border-left: 4px solid #2D5240;
+    border-radius: 0 10px 10px 0;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+}
+.result-disease-name  { font-size: 20px; font-weight: 600; color: #1C3A2F; margin-bottom: 4px; }
+.result-disease-plant { font-size: 13px; color: #7A6E5C; }
+.result-disease-conf  {
+    float: right;
+    background: #2D5240; color: #A8D5B5;
+    font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px; margin-top: -2px;
+}
+
+/* severity badge */
+.sev-badge {
+    display: inline-block; font-size: 12px; font-weight: 600;
+    padding: 4px 14px; border-radius: 20px; margin-bottom: 16px;
+}
+
+/* meters */
+.meter-wrap     { margin-bottom: 14px; }
+.meter-row-top  { display: flex; justify-content: space-between; font-size: 12px; color: #7A6E5C; margin-bottom: 5px; }
+.meter-track    { height: 7px; background: #E8DFC8; border-radius: 4px; overflow: hidden; }
+.meter-fill     { height: 100%; border-radius: 4px; }
+
+/* advice */
+.advice-title {
+    font-size: 13px; font-weight: 600; color: #2D5240;
+    margin: 18px 0 12px; padding-bottom: 8px;
+    border-bottom: 1px solid #E0D8C8;
+}
+.advice-item  { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.advice-dot   { width: 7px; height: 7px; border-radius: 50%; background: #5A8A6A; margin-top: 5px; flex-shrink: 0; }
+.advice-text  { font-size: 13px; color: #3D2E1E; line-height: 1.7; }
+
+/* history */
+.hist-entry   { background: #F0EBE0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #DDD5C0; }
+.hist-name    { font-size: 13px; font-weight: 500; color: #1C3A2F; }
+.hist-meta    { font-size: 11px; color: #9A8E7C; margin-top: 2px; }
+.hist-time    { font-size: 11px; color: #B0A48C; }
+
+/* info / season cards */
+.info-card    { background: #F0EBE0; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; border: 1px solid #DDD5C0; }
+.info-card-name { font-size: 13px; font-weight: 500; color: #1C3A2F; margin-bottom: 3px; }
+.info-card-desc { font-size: 12px; color: #7A6E5C; line-height: 1.6; }
+
+.season-card  { background: #F0EBE0; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; border-left: 3px solid #5A8A6A; border-top: 1px solid #DDD5C0; border-right: 1px solid #DDD5C0; border-bottom: 1px solid #DDD5C0; }
+.season-title { font-size: 13px; font-weight: 600; color: #1C3A2F; margin-bottom: 3px; }
+.season-desc  { font-size: 12px; color: #7A6E5C; }
+
+/* empty state */
+.empty-state  { text-align: center; padding: 60px 30px; color: #B0A48C; }
+.empty-icon   { font-size: 52px; margin-bottom: 14px; }
+.empty-text   { font-size: 14px; }
