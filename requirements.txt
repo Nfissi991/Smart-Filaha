@@ -8,3 +8,4 @@ python-dotenv
 bcrypt
 pandas
 groq
+psycopg2-binary

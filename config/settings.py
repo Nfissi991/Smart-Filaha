@@ -1,4 +1,8 @@
 # config/settings.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 APP_NAME    = "Plant Disease Detector"
 APP_VERSION = "v3.0"
@@ -30,7 +34,9 @@ COLORS = {
 LANGUAGES = ["دارجة", "العربية", "Français", "English"]
 
 # ── DB ──
-DB_URL = "sqlite:///plant_detector.db"  # tbdl b PostgreSQL f production
+DB_URL = os.getenv("DATABASE_URL", "sqlite:///plant_detector.db")
+if DB_URL.startswith("postgres://"):
+    DB_URL = DB_URL.replace("postgres://", "postgresql://", 1)
 
 # ── Modèle ──
 MODEL_PATH      = "archive_best_model.h5"
