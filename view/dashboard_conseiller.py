@@ -53,6 +53,7 @@ def resolve_file(path):
     if not path:
         return None
     raw = str(path).strip().strip('"').strip("'")
+    raw = raw.replace("\\", "/")
     if not raw:
         return None
 
