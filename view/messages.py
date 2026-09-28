@@ -1,24 +1,20 @@
 import streamlit as st
 import html
-
 from services.message_service import (
     get_my_conversations,
     get_conversation,
     send_message,
     mark_messages_read,
 )
-
+from database.db import SessionLocal
+from database.models import User
 from view.home import render_sidebar, render_topbar, inject_css
-
-
 def render_messages():
-
     # =========================================================
     # GLOBAL DESIGN
     # =========================================================
     inject_css()
     render_sidebar()
-
     # =========================================================
     # MESSAGES CSS
     # =========================================================
@@ -31,13 +27,11 @@ def render_messages():
     margin-top: 5px;
     margin-bottom: 3px;
 }
-
 .messages-subtitle {
     color: #7A8B82;
     font-size: 12px;
     margin-bottom: 18px;
 }
-
 .msg-layout {
     background: white;
     border: 1px solid #E1E9E4;
@@ -45,7 +39,6 @@ def render_messages():
     overflow: hidden;
     box-shadow: 0 4px 18px rgba(20,60,40,.05);
 }
-
 /* HEADER */
 .msg-header {
     height: 72px;
@@ -55,7 +48,6 @@ def render_messages():
     border-bottom: 1px solid #E5EBE7;
     background: white;
 }
-
 .msg-avatar {
     width: 42px;
     height: 42px;
@@ -67,19 +59,16 @@ def render_messages():
     font-size: 19px;
     margin-right: 11px;
 }
-
 .msg-name {
     color: #18362A;
     font-size: 14px;
     font-weight: 800;
 }
-
 .msg-role {
     color: #8A9991;
     font-size: 10px;
     margin-top: 3px;
 }
-
 .msg-online {
     margin-left: auto;
     background: #EAF6EE;
@@ -89,7 +78,6 @@ def render_messages():
     font-size: 10px;
     font-weight: 700;
 }
-
 .msg-online-dot {
     display: inline-block;
     width: 6px;
@@ -98,25 +86,21 @@ def render_messages():
     border-radius: 50%;
     margin-right: 4px;
 }
-
 /* CHAT */
 .msg-chat {
     background: #F8FAF8;
     min-height: 450px;
     padding: 22px 20px;
 }
-
 .msg-row {
     display: flex;
     align-items: flex-end;
     gap: 8px;
     margin-bottom: 14px;
 }
-
 .msg-row.mine {
     justify-content: flex-end;
 }
-
 .msg-small-avatar {
     width: 30px;
     height: 30px;
@@ -128,7 +112,6 @@ def render_messages():
     justify-content: center;
     font-size: 14px;
 }
-
 .msg-bubble {
     max-width: 65%;
     background: white;
@@ -140,14 +123,12 @@ def render_messages():
     line-height: 1.55;
     box-shadow: 0 2px 6px rgba(20,60,40,.04);
 }
-
 .msg-bubble.mine {
     background: #1E7A46;
     border: none;
     color: white;
     border-radius: 15px 15px 4px 15px;
 }
-
 /* EMPTY */
 .msg-empty {
     min-height: 420px;
@@ -157,24 +138,20 @@ def render_messages():
     align-items: center;
     text-align: center;
 }
-
 .msg-empty-icon {
     font-size: 40px;
     margin-bottom: 8px;
 }
-
 .msg-empty-title {
     color: #53665C;
     font-size: 14px;
     font-weight: 700;
 }
-
 .msg-empty-text {
     color: #94A099;
     font-size: 11px;
     margin-top: 5px;
 }
-
 /* LEFT TITLE */
 .msg-list-title {
     color: #18362A;
@@ -182,13 +159,11 @@ def render_messages():
     font-weight: 800;
     margin-bottom: 3px;
 }
-
 .msg-list-subtitle {
     color: #93A098;
     font-size: 9px;
     margin-bottom: 12px;
 }
-
 /* CONVERSATION BUTTONS */
 div[data-testid="column"]:first-child .stButton > button {
     background: white !important;
@@ -200,47 +175,51 @@ div[data-testid="column"]:first-child .stButton > button {
     padding: 10px 12px !important;
     margin-bottom: 5px !important;
 }
-
 div[data-testid="column"]:first-child .stButton > button:hover {
     background: #EAF5ED !important;
     border-color: #5B8C6B !important;
     color: #1E7A46 !important;
 }
-
 /* INPUT */
 div[data-testid="stChatInput"] {
     padding: 10px 15px 15px 15px;
     background: white;
 }
-
 div[data-testid="stChatInput"] textarea {
     border-radius: 12px !important;
     border: 1px solid #DCE6DF !important;
 }
 </style>
 """, unsafe_allow_html=True)
-
     # =========================================================
     # TOP BAR
     # =========================================================
     render_topbar()
-
     # =========================================================
     # USER
     # =========================================================
     user_id = st.session_state.get("user_id")
-
     if not user_id:
         st.error("Utilisateur non connecté.")
         return
-
     # =========================================================
     # CONTACTS
     # =========================================================
-    contacts = get_my_conversations(user_id)
-
+    contacts = list(get_my_conversations(user_id))
     contact_id = st.session_state.get("contact_adviser_id")
-
+    # Conseiller choisi via "Contacter le conseiller" mais sans message encore :
+    # on l'ajoute en haut de la liste pour pouvoir lui écrire.
+    if contact_id is not None and contact_id != user_id \
+            and not any(u.id == contact_id for u in contacts):
+        _db = SessionLocal()
+        try:
+            pending = _db.query(User).filter(
+                User.id == contact_id, User.is_active == True
+            ).first()
+        finally:
+            _db.close()
+        if pending is not None:
+            contacts.insert(0, pending)
     if contact_id is not None:
         selected_id = contact_id
     elif contacts:
@@ -248,7 +227,6 @@ div[data-testid="stChatInput"] textarea {
         st.session_state["contact_adviser_id"] = selected_id
     else:
         selected_id = None
-
     # =========================================================
     # TITLE
     # =========================================================
@@ -256,17 +234,14 @@ div[data-testid="stChatInput"] textarea {
         '<div class="messages-title">💬 Messages</div>',
         unsafe_allow_html=True
     )
-
     st.markdown(
         '<div class="messages-subtitle">Échangez avec votre conseiller agricole</div>',
         unsafe_allow_html=True
     )
-
     # =========================================================
     # NO CONTACTS
     # =========================================================
     if not contacts:
-
         st.markdown(
             '<div class="msg-layout">'
             '<div class="msg-empty">'
@@ -279,9 +254,7 @@ div[data-testid="stChatInput"] textarea {
             '</div>',
             unsafe_allow_html=True
         )
-
         return
-
     # =========================================================
     # SELECTED CONTACT
     # =========================================================
@@ -289,12 +262,10 @@ div[data-testid="stChatInput"] textarea {
         (u for u in contacts if u.id == selected_id),
         None
     )
-
     if selected_user is None:
         selected_user = contacts[0]
         selected_id = selected_user.id
         st.session_state["contact_adviser_id"] = selected_id
-
     # =========================================================
     # GET MESSAGES
     # =========================================================
@@ -302,12 +273,10 @@ div[data-testid="stChatInput"] textarea {
         user_id,
         selected_id
     )
-
     mark_messages_read(
         user_id,
         selected_id
     )
-
     # =========================================================
     # TWO COLUMNS
     # =========================================================
@@ -315,24 +284,19 @@ div[data-testid="stChatInput"] textarea {
         [3, 7],
         gap="small"
     )
-
     # =========================================================
     # LEFT
     # =========================================================
     with left:
-
         st.markdown(
             '<div class="msg-list-title">Conversations</div>',
             unsafe_allow_html=True
         )
-
         st.markdown(
             '<div class="msg-list-subtitle">Vos conversations récentes</div>',
             unsafe_allow_html=True
         )
-
         for contact in contacts:
-
             if st.button(
                 f"👤  {contact.username}",
                 key=f"conversation_{contact.id}",
@@ -340,16 +304,13 @@ div[data-testid="stChatInput"] textarea {
             ):
                 st.session_state["contact_adviser_id"] = contact.id
                 st.rerun()
-
     # =========================================================
     # RIGHT
     # =========================================================
     with right:
-
         username = html.escape(
             selected_user.username
         )
-
         # HEADER
         st.markdown(
             '<div class="msg-layout">'
@@ -366,15 +327,12 @@ div[data-testid="stChatInput"] textarea {
             '</div>',
             unsafe_allow_html=True
         )
-
         # CHAT
         st.markdown(
             '<div class="msg-chat">',
             unsafe_allow_html=True
         )
-
         if not conversation:
-
             st.markdown(
                 '<div class="msg-empty">'
                 '<div class="msg-empty-icon">👋</div>'
@@ -387,30 +345,22 @@ div[data-testid="stChatInput"] textarea {
                 '</div>',
                 unsafe_allow_html=True
             )
-
         else:
-
             for message in conversation:
-
                 content = html.escape(
                     message.content
                 )
-
                 is_mine = (
                     message.sender_id == user_id
                 )
-
                 if is_mine:
-
                     st.markdown(
                         '<div class="msg-row mine">'
                         f'<div class="msg-bubble mine">{content}</div>'
                         '</div>',
                         unsafe_allow_html=True
                     )
-
                 else:
-
                     st.markdown(
                         '<div class="msg-row">'
                         '<div class="msg-small-avatar">👨‍🌾</div>'
@@ -418,29 +368,23 @@ div[data-testid="stChatInput"] textarea {
                         '</div>',
                         unsafe_allow_html=True
                     )
-
         st.markdown(
             '</div>',
             unsafe_allow_html=True
         )
-
         # =====================================================
         # SEND MESSAGE
         # =====================================================
         message_text = st.chat_input(
             "Écrivez votre message..."
         )
-
         if message_text:
-
             send_message(
                 sender_id=user_id,
                 receiver_id=selected_id,
                 content=message_text
             )
-
             st.rerun()
-
         st.markdown(
             '</div>',
             unsafe_allow_html=True
