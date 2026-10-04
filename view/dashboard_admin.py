@@ -328,7 +328,18 @@ def render_admin():
                 """, unsafe_allow_html=True)
 
     # ── MODÈLE IA ──
-    with tab_model:
+        with tab_model:
+         import json
+         from config.settings import MODEL_PATH, CLASS_NAMES_PATH
+
+         try:
+             with open(CLASS_NAMES_PATH, encoding="utf-8") as _f:
+                 _n_classes = len(json.load(_f))
+         except Exception:
+             _n_classes = "?"
+
+        _ACCURACY = "96.4%"   # ⚠️ bddlha b val_accuracy dyal model jdid (mn notebook)
+
         st.markdown(f"""
         <div style="background:{C['bg_card']};border:1px solid {C['border']};
                     border-radius:12px;padding:24px;margin-bottom:16px;">
@@ -336,15 +347,15 @@ def render_admin():
                         margin-bottom:16px;">🤖 Informations du modèle</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                 <div style="font-size:13px;color:{C['text_mid']};">Fichier</div>
-                <div style="font-size:13px;color:{C['text_dark']};">archive_best_model.h5</div>
+                <div style="font-size:13px;color:{C['text_dark']};">{MODEL_PATH}</div>
                 <div style="font-size:13px;color:{C['text_mid']};">Architecture</div>
                 <div style="font-size:13px;color:{C['text_dark']};">MobileNetV2 — CNN</div>
                 <div style="font-size:13px;color:{C['text_mid']};">Classes</div>
-                <div style="font-size:13px;color:{C['text_dark']};">38 maladies</div>
+                <div style="font-size:13px;color:{C['text_dark']};">{_n_classes} classes</div>
                 <div style="font-size:13px;color:{C['text_mid']};">Précision</div>
-                <div style="font-size:13px;font-weight:600;color:#1D9E75;">96.4%</div>
+                <div style="font-size:13px;font-weight:600;color:#1D9E75;">{_ACCURACY}</div>
                 <div style="font-size:13px;color:{C['text_mid']};">Dataset</div>
-                <div style="font-size:13px;color:{C['text_dark']};">PlantVillage — 3.5M images</div>
+                <div style="font-size:13px;color:{C['text_dark']};">PlantVillage + Chili (stades de croissance)</div>
             </div>
         </div>
         """, unsafe_allow_html=True)

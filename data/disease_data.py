@@ -1,5 +1,4 @@
 # data/disease_data.py
-
 PLANT_NAMES = {
     "Tomato":               {"دارجة": "الطماطم",     "العربية": "الطماطم",      "Français": "Tomate",           "English": "Tomato"},
     "Potato":               {"دارجة": "البطاطس",     "العربية": "البطاطس",      "Français": "Pomme de terre",   "English": "Potato"},
@@ -7,6 +6,7 @@ PLANT_NAMES = {
     "Corn_(maize)":         {"دارجة": "الدرة",        "العربية": "الذرة",         "Français": "Maïs",             "English": "Corn"},
     "Apple":                {"دارجة": "التفاح",       "العربية": "التفاح",        "Français": "Pomme",            "English": "Apple"},
     "Pepper,_bell":         {"دارجة": "الفلفل",       "العربية": "الفلفل",        "Français": "Poivron",          "English": "Pepper"},
+    "Chili_pepper":         {"دارجة": "الفلفل الحار", "العربية": "الفلفل الحار",  "Français": "Piment",           "English": "Chili pepper"},
     "Strawberry":           {"دارجة": "الفراولة",     "العربية": "الفراولة",      "Français": "Fraise",           "English": "Strawberry"},
     "Cherry_(including_sour)": {"دارجة": "الكرز",    "العربية": "الكرز",         "Français": "Cerise",           "English": "Cherry"},
     "Peach":                {"دارجة": "الخوخ",        "العربية": "الخوخ",         "Français": "Pêche",            "English": "Peach"},
@@ -16,14 +16,12 @@ PLANT_NAMES = {
     "Squash":               {"دارجة": "القرع",        "العربية": "القرع",         "Français": "Courge",           "English": "Squash"},
     "Orange":               {"دارجة": "البرتقال",     "العربية": "البرتقال",      "Français": "Orange",           "English": "Orange"},
 }
-
 GENERIC_ADVICE = {
     "دارجة":   ["شيل الأجزاء المريضة فوراً", "رش مبيد فطري مناسب واتبع التعليمات", "ما تسقيش بزاف", "استشر خبير زراعي"],
     "العربية": ["أزل الأجزاء المصابة فوراً", "رش مبيداً فطرياً مناسباً", "تجنب الإفراط في الري", "استشر خبيراً زراعياً"],
     "Français": ["Retirez les parties infectées", "Pulvérisez un fongicide adapté", "Évitez l'excès d'arrosage", "Consultez un agronome"],
     "English":  ["Remove infected parts immediately", "Spray appropriate fungicide", "Avoid overwatering", "Consult an agronomist"],
 }
-
 DISEASE_DATA = {
     "Tomato___Early_blight": {
         "ar_name":  "اللفحة المبكرة للطماطم",
@@ -114,6 +112,72 @@ DISEASE_DATA = {
             "العربية": ["رش مبيداً فطرياً يحتوي على التريازول عند أول ظهور للمرض", "استخدم أصناف مقاومة للصدأ في الموسم القادم", "تجنب الزراعة الكثيفة لضمان تهوية جيدة", "راقب الحقل أسبوعياً خاصة في الطقس الرطب"],
             "Français": ["Pulvérisez un fongicide à base de triazole dès les premiers symptômes", "Utilisez des variétés résistantes à la rouille la saison prochaine", "Évitez la densité excessive de plantation", "Surveillez le champ chaque semaine par temps humide"],
             "English":  ["Spray a triazole-based fungicide at first signs of disease", "Use rust-resistant varieties next season", "Avoid excessive planting density", "Monitor the field weekly, especially in humid weather"],
+        },
+    },
+    # ───────────── Piment / Chili pepper (stades de croissance) ─────────────
+    "Chili_pepper___Green_fruit": {
+        "ar_name":  "فلفل حار أخضر (ثمرة غير ناضجة)",
+        "dar_name": "فلفلة حارة خضرا (باقي ما نضجات)",
+        "fr_name":  "Piment vert (fruit non mûr)",
+        "en_name":  "Green chili (unripe fruit)",
+        "severity": "none",
+        "advice": {
+            "دارجة":   ["الثمرة فمرحلة النمو والنبتة بخير", "سقي منتظم بلا إفراط باش ما تتعفنش الجذور", "زيد سماد فيه البوتاسيوم باش الثمار تكبر وتنضج مزيان", "حمي الثمار من الشمس القوية بزاف", "تقدر تجني الثمار خضرا للاستهلاك أو تستنى حتى تحمار"],
+            "العربية": ["الثمرة في مرحلة النمو والنبات بصحة جيدة", "ري منتظم دون إفراط لتجنب تعفن الجذور", "أضف سماداً غنياً بالبوتاسيوم لتحسين نمو الثمار ونضجها", "احمِ الثمار من أشعة الشمس الشديدة", "يمكنك الجني وهي خضراء للاستهلاك أو الانتظار حتى تنضج"],
+            "Français": ["Le fruit est en cours de croissance, la plante est en bonne santé", "Arrosage régulier sans excès pour éviter la pourriture des racines", "Ajoutez un engrais riche en potassium pour favoriser le grossissement et la maturation", "Protégez les fruits d'un soleil trop intense", "Récoltez vert pour consommer ou attendez la maturité (rouge)"],
+            "English":  ["The fruit is still growing and the plant is healthy", "Water regularly without overdoing it to avoid root rot", "Add potassium-rich fertilizer to support fruit growth and ripening", "Protect fruits from very intense sun", "You can harvest green for use or wait until they ripen to red"],
+        },
+    },
+    "Chili_pepper___Red_fruit": {
+        "ar_name":  "فلفل حار أحمر (ثمرة ناضجة)",
+        "dar_name": "فلفلة حارة حمرا (ناضجة وجاهزة)",
+        "fr_name":  "Piment rouge (fruit mûr)",
+        "en_name":  "Red chili (ripe fruit)",
+        "severity": "none",
+        "advice": {
+            "دارجة":   ["الثمرة ناضجة وجاهزة للجني", "جني الثمار فالصباح الباكر وبمقص باش ما تتكسرش الغصن", "الجني المنتظم كيشجع النبتة تنتج ثمار جديدة", "فرز الثمار السليمة على المتضررة قبل التخزين", "ما تخليش الثمار الناضجة بزاف على النبتة باش ما تفسدش"],
+            "العربية": ["الثمرة ناضجة وجاهزة للقطاف", "اجنِ الثمار صباحاً وباستخدام مقص حتى لا ينكسر الغصن", "الجني المنتظم يحفز النبات على إنتاج ثمار جديدة", "افرز الثمار السليمة عن المتضررة قبل التخزين", "لا تترك الثمار الناضجة طويلاً على النبات حتى لا تفسد"],
+            "Français": ["Le fruit est mûr et prêt à être récolté", "Récoltez tôt le matin avec un sécateur pour ne pas casser la tige", "Une récolte régulière stimule la production de nouveaux fruits", "Triez les fruits sains et écartez ceux qui sont abîmés avant stockage", "Ne laissez pas trop longtemps les fruits mûrs sur la plante pour éviter qu'ils ne pourrissent"],
+            "English":  ["The fruit is ripe and ready to harvest", "Harvest early in the morning with scissors so the stem does not break", "Regular harvesting encourages the plant to produce new fruits", "Sort healthy fruits from damaged ones before storage", "Do not leave ripe fruits on the plant for too long to avoid rot"],
+        },
+    },
+    "Chili_pepper___Dry_fruit": {
+        "ar_name":  "فلفل حار مجفف",
+        "dar_name": "فلفلة حارة ناشفة",
+        "fr_name":  "Piment séché",
+        "en_name":  "Dried chili",
+        "severity": "none",
+        "advice": {
+            "دارجة":   ["إلا كان التجفيف مقصود: خزن الفلفل فمكان نشيف ومهوي بعيد على الرطوبة", "حط الفلفل فعلبة محكمة الإغلاق باش يبقى صالح مدة طويلة", "إلا نشفات الثمار فوق النبتة قبل ما تنضج: شوف السقي والحرارة", "شيل الثمار الذابلة باش النبتة تركز على الثمار الجديدة"],
+            "العربية": ["إذا كان التجفيف مقصوداً: خزّن الفلفل في مكان جاف ومهوّى بعيداً عن الرطوبة", "ضعه في وعاء محكم الإغلاق ليبقى صالحاً لمدة أطول", "إذا جفت الثمار على النبات قبل النضج: راجع الري ودرجة الحرارة", "أزل الثمار الذابلة لكي يركز النبات على الثمار الجديدة"],
+            "Français": ["Si le séchage est voulu : stockez dans un endroit sec et aéré, à l'abri de l'humidité", "Conservez dans un récipient hermétique pour une longue durée", "Si les fruits sèchent sur la plante avant maturité : vérifiez l'arrosage et la chaleur", "Retirez les fruits flétris pour que la plante se concentre sur les nouveaux fruits"],
+            "English":  ["If drying is intentional: store in a dry, ventilated place away from moisture", "Keep in an airtight container for long storage", "If fruits dry on the plant before ripening: check watering and heat stress", "Remove withered fruits so the plant focuses on new ones"],
+        },
+    },
+    "Chili_pepper___Rotten_fruit": {
+        "ar_name":  "ثمرة فلفل حار فاسدة",
+        "dar_name": "فلفلة حارة خاسرة",
+        "fr_name":  "Fruit de piment pourri",
+        "en_name":  "Rotten chili fruit",
+        "severity": "medium",
+        "advice": {
+            "دارجة":   ["شيل الثمار الخاسرة من النبتة فوراً", "ما تخليهمش فالأرض باش المرض ما يعديش للثمار الأخرى", "شوف الجو: الرطوبة بزاف أو السقي الزايد كيسبب التعفن", "رش مبيد فطري نحاسي إلا بدا المرض كينتشر", "عقم المقص ديال الجني بين نبتة وأخرى"],
+            "العربية": ["أزل الثمار الفاسدة من النبات فوراً", "لا تتركها على الأرض حتى لا تنتقل العدوى إلى باقي الثمار", "تحقق من الرطوبة والري الزائد فهما سبب شائع للتعفن", "رش مبيداً فطرياً نحاسياً إذا بدأ المرض بالانتشار", "عقّم مقص الجني بين نبتة وأخرى"],
+            "Français": ["Retirez immédiatement les fruits pourris de la plante", "Ne les laissez pas au sol pour éviter la contamination des autres fruits", "Vérifiez l'humidité et l'excès d'arrosage, causes fréquentes de pourriture", "Appliquez un fongicide cuprique si la maladie se propage", "Désinfectez le sécateur entre deux plants"],
+            "English":  ["Remove rotten fruits from the plant immediately", "Do not leave them on the ground to avoid spreading the infection", "Check humidity and overwatering, which are common causes of rot", "Apply a copper-based fungicide if the problem is spreading", "Disinfect your pruning shears between plants"],
+        },
+    },
+    "Chili_pepper___Flower": {
+        "ar_name":  "زهرة الفلفل الحار (مرحلة الإزهار)",
+        "dar_name": "زهرة الفلفل الحار (مرحلة التزهير)",
+        "fr_name":  "Fleur de piment (floraison)",
+        "en_name":  "Chili flower (flowering stage)",
+        "severity": "none",
+        "advice": {
+            "دارجة":   ["التزهير مرحلة حساسة: سقي منتظم بلا إفراط", "الحرارة القوية بزاف كتخلي الزهور تطيح: وفر ظل خفيف فوقت الذروة", "ما تزيدش بزاف فسماد الأزوت: كيقوي الأوراق وكيضعف الثمار", "زيد سماد فيه الفوسفور والبوتاسيوم باش الزهور تعقد", "راقب الحشرات الصغيرة (التربس والمن) لأنها كتضر الزهور"],
+            "العربية": ["الإزهار مرحلة حساسة: ري منتظم دون إفراط", "الحرارة الشديدة تسبب تساقط الأزهار: وفّر ظلاً خفيفاً وقت الذروة", "تجنب الإفراط في سماد الأزوت لأنه يقوي الأوراق على حساب الثمار", "أضف سماداً غنياً بالفوسفور والبوتاسيوم لتحسين عقد الثمار", "راقب الحشرات الصغيرة (التربس والمن) فهي تضر بالأزهار"],
+            "Français": ["La floraison est une étape sensible : arrosage régulier sans excès", "Une forte chaleur fait tomber les fleurs : prévoyez un ombrage léger aux heures chaudes", "Évitez l'excès d'azote : il favorise le feuillage au détriment des fruits", "Apportez un engrais riche en phosphore et potassium pour favoriser la nouaison", "Surveillez les petits insectes (thrips, pucerons) qui abîment les fleurs"],
+            "English":  ["Flowering is a sensitive stage: water regularly without overdoing it", "Strong heat makes flowers drop: provide light shade during peak hours", "Avoid excess nitrogen: it favors leaves over fruit", "Add phosphorus- and potassium-rich fertilizer to support fruit set", "Watch for small insects (thrips, aphids) that damage flowers"],
         },
     },
 }

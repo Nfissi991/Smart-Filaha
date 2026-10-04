@@ -41,8 +41,8 @@ elif DB_URL.startswith("postgresql://"):
     DB_URL = DB_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 # ── Modèle ──
-MODEL_PATH      = "archive_best_model.h5"
-CLASS_NAMES_PATH = "class_names.json"
+MODEL_PATH       = "archive_best_model_v2.h5"
+CLASS_NAMES_PATH = "class_names_v2.json"
 IMG_SIZE        = (128, 128)
 
 # ── Auth ──
